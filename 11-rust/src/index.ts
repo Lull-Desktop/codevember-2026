@@ -100,7 +100,7 @@ export const look = {
   peelAt: [0.45, 1.15],
   fallAt: 1.0, // plus up to fallSpread, per flake
   fallSpread: 0.35,
-  fallShare: 0.25, // how many flakes drop off; the rest stay curled
+  fallShare: 0.05, // how many flakes drop off; the rest stay curled
   fallDown: 0.7, // 0: which ones fall is chance; 1: the ones facing down go first (with a small share, only those)
   gravity: 0.5,
   // loose flakes (a sim on the GPU)
