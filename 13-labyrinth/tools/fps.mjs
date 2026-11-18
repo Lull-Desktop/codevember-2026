@@ -1,0 +1,31 @@
+// node tools/fps.mjs [WxH] : frames a second of the page as it plays, headless (GPU work is waited for, so this is the real cost)
+import { chromium } from "playwright-core";
+import fs from "node:fs";
+import os from "node:os";
+const [size = "1280x720"] = process.argv.slice(2);
+const url = process.env.URL ?? "http://localhost:5313/";
+const base = os.homedir() + "/Library/Caches/ms-playwright/chromium-1243/";
+const sub = fs.readdirSync(base).find((d) => d.startsWith("chrome-"));
+const app = fs.readdirSync(base + sub).find((d) => d.endsWith(".app"));
+const browser = await chromium.launch({ executablePath: `${base}${sub}/${app}/Contents/MacOS/${app.replace(".app", "")}`, headless: true });
+const [w, h] = size.split("x").map(Number);
+const page = await browser.newPage({ viewport: { width: w, height: h }, deviceScaleFactor: +(process.env.DPR ?? 1) });
+page.on("pageerror", (e) => console.log(e.message.slice(0, 800)));
+await page.goto(url);
+await page.waitForFunction(() => window.__labyrinth && window.__labyrinth.state.frame > 2, null, { timeout: 60000 });
+if (process.env.SET) await page.evaluate((s) => (Object.assign(window.__labyrinth.look, JSON.parse(s)), window.__labyrinth.refresh(), window.__labyrinth.frameUp()), process.env.SET);
+if (process.env.EVAL) await page.evaluate(process.env.EVAL);
+const ms = await page.evaluate(async () => {
+  const r = window.__labyrinth;
+  const device = r.renderer.backend.device;
+  for (let i = 0; i < 5; i++) await new Promise(requestAnimationFrame);
+  await device.queue.onSubmittedWorkDone();
+  const t0 = performance.now();
+  const f0 = r.state.frame;
+  while (performance.now() - t0 < 3000) await new Promise(requestAnimationFrame);
+  await device.queue.onSubmittedWorkDone();
+  return (performance.now() - t0) / (r.state.frame - f0);
+});
+console.log(`${size}: ${ms.toFixed(1)} ms a frame (${(1000 / ms).toFixed(0)} fps)`);
+await Promise.race([browser.close(), new Promise((r) => setTimeout(r, 2500))]);
+process.exit(0);
