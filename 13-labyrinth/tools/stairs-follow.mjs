@@ -10,7 +10,7 @@ const browser = await chromium.launch({ executablePath: `${base}${sub}/${app}/Co
 const page = await browser.newPage({ viewport: { width: 1200, height: 800 } });
 const bad = [];
 page.on("pageerror", (e) => bad.push(e.message));
-await page.goto("http://localhost:5313/stairs.html");
+await page.goto("http://localhost:5313/");
 await page.waitForFunction(() => window.__stairs && window.__stairs.state.frame > 30, null, { timeout: 60000 });
 await page.addStyleTag({ content: ".lil-gui,canvas+div{display:none!important}" });
 // a walker whose up is x: where it is on the screen

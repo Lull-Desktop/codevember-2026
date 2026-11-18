@@ -10,7 +10,7 @@ const app = fs.readdirSync(base + sub).find((d) => d.endsWith(".app"));
 const browser = await chromium.launch({ executablePath: `${base}${sub}/${app}/Contents/MacOS/${app.replace(".app", "")}`, headless: true });
 const page = await browser.newPage({ viewport: { width: 700, height: 700 }, deviceScaleFactor: 1 });
 page.on("pageerror", (e) => console.log(e.message.slice(0, 400)));
-await page.goto("http://localhost:5313/stairs.html");
+await page.goto("http://localhost:5313/");
 await page.waitForFunction(() => window.__stairs && window.__stairs.state.frame > 2, null, { timeout: 60000 });
 await page.addStyleTag({ content: ".lil-gui,canvas+div,body>div:not(:has(canvas)){display:none!important}" });
 await page.evaluate(() => { const r = window.__stairs; Object.assign(r.look, { smooth: false, samples: 96, drift: 0 }); r.rebuild(); });

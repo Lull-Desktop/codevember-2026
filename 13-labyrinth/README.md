@@ -1,66 +1,20 @@
 # 13-labyrinth
 
-A man walks straight on through a labyrinth that never stops rearranging itself. Walls slide along the
-ground like doors, all over it; the one across his way slides aside just before he gets there, and back
-behind him. He never slows. The whole maze moves, and he is only lucky. 40 seconds, and it loops exactly.
+An endless pile of cubes with stairs, curved stairs, arches and windows on it, after a picture in the spirit
+of Escher's Relativity, path traced: three gravities, one for each way a face can look, and people walking,
+climbing, falling into holes and sitting in windows under all three. One way runs through the whole pile in
+the direction the picture drifts, and the walkers on it keep up with it: 48 seconds, and it loops exactly.
+`planet.html` is a ball built of the same things.
 
 ```sh
 npm run dev
 ```
 
-Drag to look round him; the panel (top right, closed) has the maze, the light, the air, the camera and the print.
+Drag to wander, wheel to zoom, click someone to go with them (the world turns so that they stand upright), T
+turns the world a third of a turn; `another` in the panel (top right, closed) for a new pile. The switch at
+the top goes between the pile and the planet.
 
-## The maze (`src/maze.ts`)
-
-Cells are unit squares, 96 east–west and 32 along the walk, wrapping both ways. The maze has a home state:
-a perfect maze, the spanning tree of random weights.
-
-- A wall is a **door** if one of its ends is free: no other wall meets it at that post, and the slot beyond
-  the post, in line with it, is empty. It can slide along its own line, through the post, into that slot,
-  and later slide home. About a third of the walls are doors.
-- Sliding a door opens its own slot and shuts the next; the three ways through round that post are exactly
-  the ring that this opens and shuts, so the maze stays perfect.
-- Two doors may be out together only if neither's new place is on the other's ring. Then any set of doors
-  out at once leaves a perfect maze, whichever go home first. So nothing is simulated: an outing is an arc
-  of the loop, laid down wherever it does not clash, and the loop closes by itself.
-
-He walks north up one column, a cell every 1.25 s. At every row a door crosses his way. Its home is either
-across his way (it slides aside from 1.3 cells before he reaches it, and starts back 1.6 cells after) or
-beside it (it comes to stand in his way, `drama` of the time, and leaves just as late). His column wraps
-round the loop, so the ways through hold one ring, his; unrolled along the walk, as it is seen, it is a tree.
-
-Where every wall is over the whole loop is baked into one sheet (a row per cell, time across: which part of
-each slot is filled), which is all the GPU needs: any moment can be drawn from the playhead alone.
-
-`node --experimental-strip-types tools/maze-check.mjs` builds the maze in node, checks that it is perfect at
-every tick and that nothing is in his way, and prints it as text.
-
-## The other way of moving: `walls: hilbert` (`src/hilbert.ts`)
-
-A try-out, and what the page opens on for now (the panel's `walls` switches back to `doors`). Every wall
-lies on one Hilbert curve through the posts: three 32 x 32 curves side by side join end to start and close
-round the back, so it is a single closed curve through every post. Along it lies a pattern of walls and
-gaps that repeats every 32 slots, and the pattern travels along the curve, a whole number of periods a loop
-(`flow`), going round every corner on the way. `pulse` makes it go a slot at a time. Nothing in it knows
-about him: he walks through walls.
-
-## The picture
-
-- Walls are instanced boxes, one per slot in a window of cells that goes with him, placed in the vertex
-  shader over whatever part of the slot is filled (a wall on its way is two boxes that meet at the post).
-  The concrete is measured on the wall, so it slides with it.
-- No shadow map (`src/light.wgsl`). A ray toward the sun only has to ask the few slots it passes over
-  before it is above every wall; seen along the ray a box is a six-sided outline, so its shadow is exact,
-  with an edge as soft as its caster is far. The sky a point has lost is the sum of what the nearest walls
-  cover of its hemisphere (each a rectangle, whose share is a closed form). Both follow the walls as they move.
-- The man (`src/man.ts`) is a coat and a few capsules, walked by placing his feet; the same capsules cast
-  his shadow.
-- One thing has no cause: a soft pool of light from straight above that goes with him (`pool`).
-
-## Another page: `stairs.html` (`src/stairs/`)
-
-A generator of endless piles of cubes with stairs on them, after a picture in the spirit of Escher's
-Relativity. Drag to wander, wheel to zoom, `another` in the panel for a new pile.
+## The pile (`index.html`, `src/stairs/`)
 
 - **The pile** (`world.ts`) is a stepped surface: columns of cubes whose height never rises as you go along
   either axis. Seen along the cube diagonal it shows every face, the three directions in equal measure.
@@ -183,19 +137,7 @@ Relativity. Drag to wander, wheel to zoom, `another` in the panel for a new pile
   its twin half a tile on are given the same random numbers in the trace (the tile is an even number of pixels
   high), so the light is the same in both.
 
-### The same on a ball: `sphere.html`
-
-The same page, with the picture laid on a ball and no seam in it (`ball.wgsl`). A flat picture that repeats
-cannot be wrapped on a ball as it is, but the plane can be laid on a ball so that every small thing keeps its
-shape and only its size changes: Mercator's map, the other way round. Once round the ball is a whole number of
-tiles (`around`), so the picture closes; toward a pole it comes again and again, smaller each time, without
-end. With `spiral` once round is a slanting step of the pattern, and the picture winds up the ball. The drift
-of the flat page is here a turning of the ball and a flow out of one pole into the other, and closes the loop
-the same way. Each frame the tile is painted whole with its people on a sheet of its own, halved down to one
-pixel (`mip.wgsl`), and the ball reads it at whatever size it needs. Drag turns the ball, the wheel sizes it.
-The tools take `URL=http://localhost:5313/sphere.html`, and `TURN=0.5,0.4` to turn it.
-
-### A ball built of the same things: `planet.html`
+## A ball built of the same things: `planet.html` (`src/planet/`)
 
 Not a picture laid on a ball, but a body: a ball of cubes with the same stairs, fans, small cubes and arches on
 it (`src/planet/world.ts`), turning. The flat pile shows one side, every face of it looking along (1, 1, 1); a
@@ -214,7 +156,7 @@ then that square costs nothing more. Painting reads the four squares about each 
 for smooth edges (`rays`). A point seen for the first time shows a guess (the sun unshadowed, and the sky)
 until its square has a few samples; after one turn of the ball the whole of it is clean, and stays clean.
 Dragging across turns it further round the sun; dragging up or down shows its far side, in shade. A new ball,
-or any change to the light, starts the gathering over. No people on it yet. The stairs page's tools work with `URL=http://localhost:5313/planet.html`.
+or any change to the light, starts the gathering over. No people on it yet. The pile's tools work with `URL=http://localhost:5313/planet.html`.
 
 Gold and lit rooms, as on the stairs page. A ball has no one up, so what is gold is a line of cubes going out
 from the middle along the axis it is farthest along (which is up for whoever stands there), with what stands in
@@ -226,15 +168,17 @@ has its light gathered too, and the light that bounces about the ball is turned 
 rooms. Nothing in it is noisy. On a ball gold mostly faces the sky, where on the flat pile it faces more pile:
 the sky seen in gold is `shine` times brighter, or it looked like dull bronze.
 
-`stairs.html` and `planet.html` have a switch between them at the top.
-
-`node tools/stairs-cost.mjs` times the page at retina size on the graphics card (`SAMPLES=12` to time the
-showing alone, once the light is done; the light's own work otherwise overlaps it and is counted in).
-`node tools/stairs-shot.mjs out.png 1200x1200 96` renders it headless after that many samples
-(`SET`, `CENTRE` as in the file). The panel's `faces` shows which way each surface faces, for finding holes.
-
 ## Tools
 
-- `node tools/shot.mjs out.png 1280x720 0.1 0.5@20,35,6` — headless stills at playheads, optionally from a
-  camera at turn,pitch,distance; `SET='{"sunUp":40}'` changes look values.
-- `node tools/fps.mjs 1920x1080` — frame time of the page as it plays.
+- `node tools/stairs-film.mjs out 1080 2880` — the whole loop, square, centred on the way through, a 60 fps frame
+  at a time, and `out.mp4` (`SET='{"res":2816,"zoom":0.475,"samples":256}'` for the posted one; `STILLS=1` for four
+  stills first, `RESUME=1` to go on from where it stopped).
+- `node tools/stairs-shot.mjs out.png 1200x1200 96` — a still after that many samples (`SET`, `CENTRE`, `HOLD`).
+- `node tools/stairs-clip.mjs dir 800x500 48 0 0.1` — frames between two moments of the loop.
+- `node tools/stairs-closeup.mjs dir <figure> 24 0.1 0.13` — follows someone at zoom 4 (`UPRIGHT=0` leaves the
+  world unturned).
+- `node tools/stairs-cost.mjs` — the page's cost at retina size on the graphics card (`SAMPLES=12` to time the
+  showing alone, once the light is done).
+- `node tools/stairs-follow.mjs out`, `node tools/stairs-pace.mjs` — checks of going with someone, and of the pace.
+
+The panel's `faces` shows which way each surface faces, for finding holes.

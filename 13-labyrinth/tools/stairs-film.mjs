@@ -18,7 +18,7 @@ const browser = await chromium.launch({ executablePath: `${base}${sub}/${app}/Co
 const page = await browser.newPage({ viewport: { width: size, height: size }, deviceScaleFactor: 1 });
 const bad = [];
 page.on("pageerror", (e) => bad.push(e.message.slice(0, 400)));
-await page.goto(process.env.URL ?? "http://localhost:5313/stairs.html");
+await page.goto(process.env.URL ?? "http://localhost:5313/");
 await page.waitForFunction(() => window.__stairs && window.__stairs.state.frame > 2, null, { timeout: 60000 });
 await page.addStyleTag({ content: ".lil-gui,canvas+div,body>div:not(:has(canvas)){display:none!important}" });
 await page.evaluate((s) => {

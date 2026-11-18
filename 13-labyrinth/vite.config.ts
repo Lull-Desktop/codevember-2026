@@ -23,6 +23,6 @@ export default defineConfig({
   build: {
     outDir: "./dist",
     assetsDir: ".",
-    rollupOptions: { input: { main: "index.html", stairs: "stairs.html", sphere: "sphere.html", planet: "planet.html" } },
+    rollupOptions: { input: { main: "index.html", planet: "planet.html" } },
   },
 });

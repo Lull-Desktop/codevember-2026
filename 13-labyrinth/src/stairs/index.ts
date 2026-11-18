@@ -15,11 +15,6 @@ import traceCode from "./trace.wgsl?raw";
 import cleanCode from "./clean.wgsl?raw";
 import showCode from "./show.wgsl?raw";
 import peopleCode from "./people.wgsl?raw";
-import mipCode from "./mip.wgsl?raw";
-import ballCode from "./ball.wgsl?raw";
-
-// sphere.html is this same page with the picture laid on a ball (ball.wgsl) and not flat on the screen
-const BALL = location.pathname.includes("sphere");
 
 const LOOP = 48; // seconds for the picture to drift a repeat of the pile on, and the walkers on the way with it
 // the light at dusk: the sun low and warm and weak, the sky dark, so that the lit rooms show what they do
@@ -63,9 +58,7 @@ export const look = {
   grain: 0.02,
   zoom: 1, // screen pixels to a pixel of the tile
   drift: 0.5, // tiles a loop, down and to the right (a half: a repeat of the pile on, as the way goes)
-  res: BALL ? 1536 : 2048, // the tile's width, pixels
-  around: 3, // on the ball: tiles round it
-  spiral: 0, // on the ball: half tiles it climbs in going round once (the picture then winds up the ball)
+  res: 2048, // the tile's width, pixels
   samples: 400, // how long to go on refining it
   smooth: true, // light a band of the tile a frame, as much as keeps the frames coming, and not the whole of it
   clean: true, // show it cleaned while the samples are few
@@ -111,8 +104,6 @@ const ranges: Record<string, [number, number, number?]> = {
   zoom: [0.25, 4, 0.01],
   drift: [-2, 2, 0.5],
   res: [512, 4096, 256],
-  around: [1, 8, 1],
-  spiral: [-8, 8, 1],
   samples: [16, 2000, 16],
 };
 const remake = new Set(["P", "seed", "rough", "stairs", "pleats", "fans", "cubes", "arches", "flights", "long", "passages", "pairs", "path"]);
@@ -138,7 +129,7 @@ const sketch: Sketch<"webgpu"> = async ({ wrap, canvas }) => {
   const cleanPipe = pipe(module(cleanCode), "frag", "rgba16float");
   // the screen is drawn with four samples a pixel, for the people's edges
   const shower = module(showCode);
-  const painted: GPUTextureFormat = BALL ? "rgba8unorm" : format; // on the ball the picture is first painted whole, on a sheet of its own
+  const painted = format;
   const showPipe = device.createRenderPipeline({ layout: "auto", vertex: { module: shower, entryPoint: "vert" }, fragment: { module: shower, entryPoint: "frag", targets: [{ format: painted }] }, multisample: { count: 4 }, depthStencil: { format: "depth24plus", depthWriteEnabled: false, depthCompare: "always" } });
   const shadePipe = device.createRenderPipeline({ layout: "auto", vertex: { module: shower, entryPoint: "vert" }, fragment: { module: shower, entryPoint: "shade", targets: [{ format: "rgba8unorm" }] } });
   const soft = device.createSampler({ magFilter: "linear", minFilter: "linear" });
@@ -159,14 +150,9 @@ const sketch: Sketch<"webgpu"> = async ({ wrap, canvas }) => {
     multisample: { count: 4, alphaToCoverageEnabled: true },
     depthStencil: { format: "depth24plus", depthWriteEnabled: true, depthCompare: "less" },
   });
-  const mipPipe = pipe(module(mipCode), "frag", "rgba8unorm");
-  const ballPipe = pipe(module(ballCode), "frag", format);
-  const even = device.createSampler({ magFilter: "linear", minFilter: "linear", addressModeU: "repeat", addressModeV: "repeat" });
-  const fine = device.createSampler({ magFilter: "linear", minFilter: "linear", mipmapFilter: "linear", addressModeU: "repeat", addressModeV: "repeat", maxAnisotropy: 16 });
   const uniform = (size: number) => device.createBuffer({ size, usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST });
   const params = uniform(160);
   const view = uniform(144);
-  const ball = uniform(64);
   const storage = (size: number) => device.createBuffer({ size, usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_DST });
   const bodies = new Float32Array(MOST * FIG * 4);
   const near = new Uint32Array(64 * 112 * SLOTS); // room for the widest tile's grid
@@ -198,10 +184,6 @@ const sketch: Sketch<"webgpu"> = async ({ wrap, canvas }) => {
   let peopleGroups: GPUBindGroup[] = [];
   let people: Figure[] = [];
   let canvasOut: { w: number; h: number; tone: GPUTexture; depth: GPUTexture; shade: GPUTexture; groups: GPUBindGroup[]; shadeGroup: GPUBindGroup } | null = null;
-  // for the ball: the whole tile painted with its people, at every size down to a pixel
-  let flat: GPUTexture | null = null;
-  let mipGroups: GPUBindGroup[] = [];
-  let ballGroup: GPUBindGroup | null = null;
   let tile = [0, 0];
   const state = { hold: -1, frame: 0, samples: 0, pause: false, rows: 0, spent: 0, interval: 0, people: 0, dropped: 0, shown: 0, skip: { people: false, shade: false }, rebuilt: 0 };
 
@@ -228,14 +210,8 @@ const sketch: Sketch<"webgpu"> = async ({ wrap, canvas }) => {
     // (even: so that half the tile down is a whole number of pixels, and the tile is the same half a tile on)
     const h = 2 * Math.round((look.res * Math.sqrt(3)) / 2);
     if (w !== tile[0]) {
-      [...sheets, ...cleans, faces, half, flat, canvasOut?.tone, canvasOut?.depth].forEach((t) => t?.destroy());
+      [...sheets, ...cleans, faces, half, canvasOut?.tone, canvasOut?.depth].forEach((t) => t?.destroy());
       canvasOut = null;
-      if (BALL) {
-        const levels = Math.floor(Math.log2(h)) + 1;
-        flat = device.createTexture({ size: [w, h], format: "rgba8unorm", mipLevelCount: levels, usage: GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.TEXTURE_BINDING });
-        mipGroups = Array.from({ length: levels - 1 }, (_, n) => device.createBindGroup({ layout: mipPipe.getBindGroupLayout(0), entries: [{ binding: 0, resource: flat!.createView({ baseMipLevel: n, mipLevelCount: 1 }) }, { binding: 1, resource: even }] }));
-        ballGroup = device.createBindGroup({ layout: ballPipe.getBindGroupLayout(0), entries: [{ binding: 0, resource: { buffer: ball } }, { binding: 1, resource: flat.createView() }, { binding: 2, resource: fine }] });
-      }
       const sheet = (format: GPUTextureFormat) => device.createTexture({ size: [w, h], format, usage: GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.TEXTURE_BINDING });
       sheets = [sheet("rgba32float"), sheet("rgba32float")];
       [faces, half, ...cleans] = [0, 1, 2, 3].map(() => sheet("rgba16float"));
@@ -309,7 +285,7 @@ const sketch: Sketch<"webgpu"> = async ({ wrap, canvas }) => {
   };
   const down = (e: PointerEvent) => ((dragging = true), (moved = 0), (canvas.style.cursor = "grabbing"), void e);
   const up = (e: PointerEvent) => {
-    if (dragging && moved < 5 && !BALL && e.target === canvas) pick(e);
+    if (dragging && moved < 5 && e.target === canvas) pick(e);
     dragging = false;
     canvas.style.cursor = "grab";
   };
@@ -338,14 +314,8 @@ const sketch: Sketch<"webgpu"> = async ({ wrap, canvas }) => {
     eye.zoomAim = Math.max(eye.zoomBefore, 2.2);
     hint.style.opacity = "0";
   };
-  const turned = [0.5, 0.42]; // the ball: round its axis, and its axis toward the eye
   const move = (e: PointerEvent) => {
     if (!dragging) return;
-    if (BALL) {
-      turned[0] -= e.movementX * 0.006;
-      turned[1] = Math.min(1.55, Math.max(-1.55, turned[1] + e.movementY * 0.006));
-      return;
-    }
     moved += Math.abs(e.movementX) + Math.abs(e.movementY);
     if (moved < 5) return;
     letGo();
@@ -365,13 +335,13 @@ const sketch: Sketch<"webgpu"> = async ({ wrap, canvas }) => {
   window.addEventListener("pointermove", move);
   canvas.addEventListener("wheel", wheel, { passive: false });
   const key = (e: KeyboardEvent) => {
-    if (BALL || (e.target as HTMLElement)?.tagName === "INPUT") return;
+    if ((e.target as HTMLElement)?.tagName === "INPUT") return;
     if (e.code === "KeyT") ((eye.aim += (2 * Math.PI) / 3), (hint.style.opacity = "0"));
     if (e.code === "Escape") letGo();
   };
   window.addEventListener("keydown", key);
   const hint = document.createElement("div");
-  hint.textContent = BALL ? "" : "click someone to go with them · T turns the world";
+  hint.textContent = "click someone to go with them · T turns the world";
   hint.style.cssText = "position:fixed;left:0;right:0;bottom:max(18px, env(safe-area-inset-bottom, 0px));text-align:center;font:12px/1.4 system-ui,sans-serif;letter-spacing:0.04em;color:rgba(70,35,45,0.6);pointer-events:none;transition:opacity 1.2s";
   canvas.after(hint);
   setTimeout(() => (hint.style.opacity = "0"), 9000);
@@ -379,14 +349,13 @@ const sketch: Sketch<"webgpu"> = async ({ wrap, canvas }) => {
   const gui = new GUI({ title: "stairs" });
   gui.close();
   for (const k of Object.keys(look) as (keyof typeof look)[]) {
-    if (!BALL && (k === "around" || k === "spiral")) continue;
     const c = typeof look[k] === "boolean" ? gui.add(look as unknown as Record<string, boolean>, k) : typeof look[k] === "string" ? gui.addColor(look, k) : gui.add(look as unknown as Record<string, number>, k, ...(ranges[k] as [number, number, number]));
     if (remake.has(k) || k === "res") c.onFinishChange(rebuild);
     else if (["walkers", "sitters", "pace", "tall", "onWay"].includes(k)) c.onChange(populate);
-    else if (!["exposure", "grain", "zoom", "drift", "samples", "smooth", "clean", "shade", "around", "spiral"].includes(k)) c.onChange(refresh);
+    else if (!["exposure", "grain", "zoom", "drift", "samples", "smooth", "clean", "shade"].includes(k)) c.onChange(refresh);
   }
   gui.add({ another: () => ((look.seed = 1 + Math.floor(Math.random() * 998)), gui.controllersRecursive().forEach((c) => c.updateDisplay()), rebuild()) }, "another");
-  if (!BALL) gui.add({ turn: () => (eye.aim += (2 * Math.PI) / 3) }, "turn");
+  gui.add({ turn: () => (eye.aim += (2 * Math.PI) / 3) }, "turn");
   // day and dusk
   const DAY = Object.fromEntries(Object.keys(DUSK).map((k) => [k, look[k as keyof typeof look]]));
   const light = (to: Record<string, unknown>) => (Object.assign(look, to), gui.controllersRecursive().forEach((c) => c.updateDisplay()), refresh());
@@ -396,7 +365,7 @@ const sketch: Sketch<"webgpu"> = async ({ wrap, canvas }) => {
   stats.dom.style.cssText = "position:fixed;top:0;left:0";
   canvas.after(stats.dom);
 
-  Object.assign(window, { __stairs: { look, state, rebuild, refresh, world: () => world, device, centre, turned, eye, bodies: () => bodies, people: () => people, view: () => ({ middle: pickAt, scale: scale(), width: canvas.width, height: canvas.height, client: canvas.clientWidth }) } }); // (the last few: for tools that click on people)
+  Object.assign(window, { __stairs: { look, state, rebuild, refresh, world: () => world, device, centre, eye, bodies: () => bodies, people: () => people, view: () => ({ middle: pickAt, scale: scale(), width: canvas.width, height: canvas.height, client: canvas.clientWidth }) } }); // (the last few: for tools that click on people)
 
   // some rows of the work in hand, from where it had got to; and on to the next work when this is done
   let timing = false; // a reading of the clock is on its way back
@@ -437,9 +406,8 @@ const sketch: Sketch<"webgpu"> = async ({ wrap, canvas }) => {
 
   // What the frames bear. The screen's own pace is taken from the quicker of the last frames; a band may cost
   // spend() of that on the graphics card, by its own clock. (Without that clock: less when a frame comes late.)
-  // (the ball's frame has the painting of the whole tile in it as well; and once the picture is clean, the rest
-  // of the samples come at half the pace, so the graphics card can rest)
-  const spend = () => (BALL ? 0.45 : 0.6) * (frame >= SETTLED ? 0.5 : 1);
+  // (once the picture is clean, the rest of the samples come at half the pace, so the graphics card can rest)
+  const spend = () => 0.6 * (frame >= SETTLED ? 0.5 : 1);
   const gaps: number[] = [];
   let last = 0;
   let interval = 16.7;
@@ -524,13 +492,13 @@ const sketch: Sketch<"webgpu"> = async ({ wrap, canvas }) => {
     }
     state.people = count;
     state.dropped = tally.dropped;
-    // What is painted: on the flat page the screen, wherever the view has wandered to; for the ball the tile itself,
-    // once, exactly. And the tiles the people must be drawn in: every one that shows, and a margin (a figure may
-    // stand anywhere in its tile, and its second likeness half a tile off)
+    // What is painted: the screen, wherever the view has wandered to. And the tiles the people must be drawn in:
+    // every one that shows, and a margin (a figure may stand anywhere in its tile, and its second likeness half a
+    // tile off)
     const extent = [world.P * Math.SQRT2, world.P * Math.sqrt(6)];
-    const paint = BALL ? { size: tile, middle: [extent[0] / 2, -extent[1] / 2], scale: tile[0] / extent[0], grain: 0 } : { size: [canvas.width, canvas.height], middle, scale: scale(), grain: look.grain };
+    const paint = { size: [canvas.width, canvas.height], middle, scale: scale(), grain: look.grain };
     // (turned, the screen takes in at most the circle about it)
-    const wide = BALL ? [paint.size[0] / paint.scale, paint.size[1] / paint.scale] : [1, 1].map(() => Math.hypot(paint.size[0], paint.size[1]) / paint.scale);
+    const wide = [1, 1].map(() => Math.hypot(paint.size[0], paint.size[1]) / paint.scale);
     const first = [Math.floor((paint.middle[0] - wide[0] / 2) / extent[0]) - 2, Math.floor((paint.middle[1] - wide[1] / 2) / extent[1]) - 1];
     const copies = [Math.ceil(wide[0] / extent[0]) + 4, Math.ceil(wide[1] / extent[1]) + 4];
     const dot = (a: number[], b: number[]) => a[0] * b[0] + a[1] * b[1] + a[2] * b[2];
@@ -547,7 +515,7 @@ const sketch: Sketch<"webgpu"> = async ({ wrap, canvas }) => {
         ...tone(look.clay), look.shade,
         ...squares, count, CAPS,
         ...copies, ...first,
-        ...(BALL ? [1, 0] : [Math.cos(eye.angle), Math.sin(eye.angle)]), state.skip.shade || look.shade <= 0 ? 0 : 1, 0,
+        Math.cos(eye.angle), Math.sin(eye.angle), state.skip.shade || look.shade <= 0 ? 0 : 1, 0,
       ]),
     );
     if (!canvasOut || canvasOut.w !== paint.size[0] || canvasOut.h !== paint.size[1] || !showGroups.length) {
@@ -579,7 +547,7 @@ const sketch: Sketch<"webgpu"> = async ({ wrap, canvas }) => {
       shading.end();
     }
     const pass = encoder.beginRenderPass({
-      colorAttachments: [{ view: canvasOut.tone.createView(), resolveTarget: BALL ? flat!.createView({ baseMipLevel: 0, mipLevelCount: 1 }) : context.getCurrentTexture().createView(), loadOp: "clear", storeOp: "discard" }],
+      colorAttachments: [{ view: canvasOut.tone.createView(), resolveTarget: context.getCurrentTexture().createView(), loadOp: "clear", storeOp: "discard" }],
       depthStencilAttachment: { view: canvasOut.depth.createView(), depthClearValue: 1, depthLoadOp: "clear", depthStoreOp: "discard" },
       ...(showClock && !showTiming && state.frame % 20 === 0 ? { timestampWrites: { querySet: showClock, beginningOfPassWriteIndex: 0, endOfPassWriteIndex: 1 } } : {}),
     });
@@ -592,24 +560,6 @@ const sketch: Sketch<"webgpu"> = async ({ wrap, canvas }) => {
       pass.draw(4, count * CAPS * copies[0] * copies[1]);
     }
     pass.end();
-    if (BALL) {
-      // the painted tile at every smaller size, and then the ball
-      mipGroups.forEach((bound, n) => {
-        const smaller = encoder.beginRenderPass({ colorAttachments: [{ view: flat!.createView({ baseMipLevel: n + 1, mipLevelCount: 1 }), loadOp: "clear", storeOp: "store" }] });
-        smaller.setPipeline(mipPipe);
-        smaller.setBindGroup(0, bound);
-        smaller.draw(3);
-        smaller.end();
-      });
-      // once round the ball is `around` tiles, and `spiral` half tiles up as well
-      const round = [(look.around * extent[0] + (look.spiral * extent[0]) / 2) / (2 * Math.PI), (look.spiral * extent[1]) / 2 / (2 * Math.PI)];
-      device.queue.writeBuffer(ball, 0, new Float32Array([canvas.width, canvas.height, 0.42 * Math.min(canvas.width, canvas.height) * look.zoom, moment, ...turned, look.grain, 6, ...round, ...middle, ...extent, 0, 0]));
-      const onto = encoder.beginRenderPass({ colorAttachments: [{ view: context.getCurrentTexture().createView(), loadOp: "clear", storeOp: "store" }] });
-      onto.setPipeline(ballPipe);
-      onto.setBindGroup(0, ballGroup!);
-      onto.draw(3);
-      onto.end();
-    }
     const showing = !!showClock && !showTiming && state.frame % 20 === 0;
     if (showing) {
       encoder.resolveQuerySet(showClock!, 0, 2, showOut, 0);

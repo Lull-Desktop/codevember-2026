@@ -9,7 +9,7 @@ const app = fs.readdirSync(base + sub).find((d) => d.endsWith(".app"));
 const browser = await chromium.launch({ executablePath: `${base}${sub}/${app}/Contents/MacOS/${app.replace(".app", "")}`, headless: true });
 for (const [name, set, skip] of [["as it is", {}, {}], ["no people", { walkers: 0, sitters: 0 }, {}], ["figures, no shade", {}, { shade: true }], ["shade, no figures", {}, { people: true }]]) {
   const page = await browser.newPage({ viewport: { width: 1512, height: 900 }, deviceScaleFactor: 2 });
-  await page.goto("http://localhost:5313/stairs.html");
+  await page.goto("http://localhost:5313/");
   await page.waitForFunction(() => window.__stairs && window.__stairs.state.frame > 2, null, { timeout: 60000 });
   const out = await page.evaluate(([set, skip, want]) => new Promise((done) => {
     const r = window.__stairs;

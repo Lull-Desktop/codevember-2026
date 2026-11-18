@@ -4,7 +4,7 @@ import { chromium } from "playwright-core";
 import fs from "node:fs";
 import os from "node:os";
 const [seconds = "8", size = "1600x1000"] = process.argv.slice(2);
-const url = process.env.URL ?? "http://localhost:5313/stairs.html";
+const url = process.env.URL ?? "http://localhost:5313/";
 const base = os.homedir() + "/Library/Caches/ms-playwright/chromium-1243/";
 const sub = fs.readdirSync(base).find((d) => d.startsWith("chrome-"));
 const app = fs.readdirSync(base + sub).find((d) => d.endsWith(".app"));

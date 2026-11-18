@@ -1,12 +1,12 @@
 // node tools/stairs-shot.mjs <out.png> [WxH] [samples] : the stairs page, headless, after that many samples of light.
 // SET='{"seed":3,"fans":0.5}' changes look values (the pile is remade); CENTRE=x,y looks there (units across and up); DPR;
-// URL=http://localhost:5313/sphere.html for the ball, and TURN=0.5,0.4 turns it (round its axis, and toward the eye);
+// URL=http://localhost:5313/planet.html for the planet, and TURN=0.5,0.4 turns it (round the sun, and over);
 // HOLD=0.3 is the moment of the loop (the picture does not drift here, so only the people differ).
 import { chromium } from "playwright-core";
 import fs from "node:fs";
 import os from "node:os";
 const [out = "stairs.png", size = "1200x1200", samples = "64"] = process.argv.slice(2);
-const url = process.env.URL ?? "http://localhost:5313/stairs.html";
+const url = process.env.URL ?? "http://localhost:5313/";
 const base = os.homedir() + "/Library/Caches/ms-playwright/chromium-1243/";
 const sub = fs.readdirSync(base).find((d) => d.startsWith("chrome-"));
 const app = fs.readdirSync(base + sub).find((d) => d.endsWith(".app"));
