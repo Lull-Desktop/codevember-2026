@@ -23,10 +23,11 @@ const room = (p: V, w: number) => {
   return Math.min(-outline(q[0], q[1], w), deep - q[2]);
 };
 
-export function solidTest(world: { P: number; data: Uint32Array; g: Int32Array }, steps: number, turns: number, small: number) {
+// what a point is in: 0 nothing, 1 a cube, 2 stairs or a fan, 3 a small cube
+export function solidKind(world: { P: number; data: Uint32Array; g: Int32Array }, steps: number, turns: number, small: number) {
   const { P, data, g } = world;
   const mod = (v: number) => ((v % P) + P) % P;
-  return (p: V) => {
+  return (p: V): number => {
     const c: V = [Math.floor(p[0]), Math.floor(p[1]), Math.floor(p[2])];
     const n = mod(c[2]) * P + mod(c[0]);
     const s = c[0] + c[1] + c[2];
@@ -34,16 +35,20 @@ export function solidTest(world: { P: number; data: Uint32Array; g: Int32Array }
     if (s < g[n]) {
       for (const f of [2, 3, 4]) {
         const w = data[n * WORDS + f];
-        if (w & 1 && s === g[n] - (f === 2 ? 1 : (w >> 7) & 15) && room(local, w) > 0) return false;
+        if (w & 1 && s === g[n] - (f === 2 ? 1 : (w >> 7) & 15) && room(local, w) > 0) return 0;
       }
-      return true;
+      return 1;
     }
     const word = data[n * WORDS + 1];
     const kind = word & 15;
-    if (!kind || s >= g[n] + Math.max(1, (word >> 12) & 15)) return false;
+    if (!kind || s >= g[n] + Math.max(1, (word >> 12) & 15)) return 0;
     const q = laid(local, (word >> 4) & 63);
-    if (kind === 1) return q[1] < 1 - Math.min(steps - 1, Math.floor(q[0] * steps)) / steps - 0.002;
-    if (kind === 2) return q[1] < (Math.min(turns - 1, Math.floor(Math.atan2(q[2], q[0]) / (Math.PI / 2 / turns))) + 1) / turns - 0.002;
-    return Math.max(...q) < small - 0.002;
+    if (kind === 1) return q[1] < 1 - Math.min(steps - 1, Math.floor(q[0] * steps)) / steps - 0.002 ? 2 : 0;
+    if (kind === 2) return q[1] < (Math.min(turns - 1, Math.floor(Math.atan2(q[2], q[0]) / (Math.PI / 2 / turns))) + 1) / turns - 0.002 ? 2 : 0;
+    return Math.max(...q) < small - 0.002 ? 3 : 0;
   };
+}
+export function solidTest(world: { P: number; data: Uint32Array; g: Int32Array }, steps: number, turns: number, small: number) {
+  const kind = solidKind(world, steps, turns, small);
+  return (p: V) => kind(p) > 0;
 }

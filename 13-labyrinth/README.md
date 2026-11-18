@@ -88,7 +88,10 @@ Relativity. Drag to wander, wheel to zoom, `another` in the panel for a new pile
   floors and walls about them (`glow`, `glowTone`, `glowPower`); some columns, and the small cubes, are polished
   gold, and show the pile in them, the lit rooms, and the sun where it is met (`gold`, `polish`, `metalTone`,
   `blur`). (Painted columns in four colours were tried, and were too loud.) A turn off gold is not counted among the three bounces (up to five
-  of them): folds of gold face one another, and a ray counted out between them came back black. `dusk` in the panel brings the sun down, so that the
+  of them): folds of gold face one another, and a ray counted out between them came back black. And the pile falls away
+  along x and z, so gold that leans that way shows the sky below the horizon, its dark bottom, which looked like
+  soot in the folds: seen in gold, the sky is never lower than at the horizon, and `shine` times brighter. (The
+  light gold throws onto the clay about it is as it is.) `dusk` in the panel brings the sun down, so that the
   lit rooms light the pile; `day` puts it back. (The people are not in the light's world: the gold does not
   show them, though they take their light from it.)
 - **Settling.** One sample of the whole tile is about six frames' worth of work, so it is done a band a frame:
@@ -121,8 +124,15 @@ Relativity. Drag to wander, wheel to zoom, `another` in the panel for a new pile
     hole to hole. Each is then walked once in advance against the shapes themselves (`solid.ts`, the same shapes
     as the shader's, asked on the processor) and kept only if the body and head never go into the pile and the
     hands and feet do so only for a moment; and a staircase is walked only if the cell above it, along the
-    walker's up, is clear (on its upper steps one stands up into it). The best that fit and do not share a cell
-    are kept, short enough to walk at `pace` in a loop. Sitters within a tenth of a cube of a walker are left out. Each foot goes
+    walker's up, is clear (on its upper steps one stands up into it). A knee is let into a step: the stairs are steep (a riser is a fifth
+    of a walker's height), and going up the knee goes into the step before it, hidden from above by the riser or
+    by the walker; counted, it kept almost everyone off the stairs that are walls to the floor. And for each of
+    the two gravities that are not the floor's, if no one is on stairs yet, the best such way that fits. The best that fit and do not share a cell
+    are kept, short enough to walk at `pace` in a loop. Sitters within a tenth of a cube of a walker are left out. Every window that is not upright, and every hole, gets
+    someone; some of the upright ones do (`sitters`), and two in three of those sit across the window instead, on
+    its side, the one whose up is a floor's (+x or +z), as the walkers of the walls would (always one of two
+    windows joined in a cube: one sits up, one across). One laid that way is kept only if it stays out of the
+    pile. Each foot goes
     on every tread of a staircase, and a stride apart on the level. A whole number of rounds a loop, and an even
     number of strides, so the loop closes.
   - The hips: as high as a straight leg holds them over the footholds either side, on a level that climbs late

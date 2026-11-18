@@ -7,7 +7,7 @@
 // across, up the picture, and toward the eye.
 import { WORDS } from "./world.ts";
 import { findRoutes, type Route } from "./routes.ts";
-import { solidTest } from "./solid.ts";
+import { solidKind, solidTest } from "./solid.ts";
 
 export type PeopleOptions = {
   seed: number;
@@ -90,6 +90,7 @@ export function createPeople(world: { P: number; data: Uint32Array; g: Int32Arra
   const rand = rng(options.seed ^ 0x2545f491);
   const H = options.tall;
   const inside = solidTest(world, steps, turns, small);
+  const what = solidKind(world, steps, turns, small);
   // A way is walked once in advance, and kept only if the walker stays out of the pile: never with its body or
   // head, and with a hand or a foot for no more than a moment (a hand brushing a wall as it swings)
   const walk = (route: Route, phase = 0, dressed = false): Walker => {
@@ -134,6 +135,10 @@ export function createPeople(world: { P: number; data: Uint32Array; g: Int32Arra
       count++;
       stroll(f, beat / N, H).caps.forEach(([a, b, r], part) => {
         if (part === 1 || r === 0) return; // (the shoulders are in the body; and a phone it has not got is nowhere)
+        // (a knee in a step: the stairs here are steep, a riser a fifth of a walker's height, and going up the knee
+        // goes into the step before it. Seen from above it is hidden by the riser or by the walker: let it be)
+        if ((part === 4 || part === 10) && what(b) === 2 && !inside(a) && !inside(mul(add(a, b), 0.5))) return;
+        if ((part === 5 || part === 11) && what(a) === 2 && !inside(b) && !inside(mul(add(a, b), 0.5))) return;
         const into = inside(a) || inside(mul(add(a, b), 0.5)) || inside(b);
         if (into && part <= 3) fine = false;
         if (into && part > 3) limbs++;
@@ -170,6 +175,16 @@ export function createPeople(world: { P: number; data: Uint32Array; g: Int32Arra
     holes.forEach((c) => fallen.add(c));
     chosen.push(route);
     if (route.kind === "fall") falls++;
+  }
+  // and for each of the two gravities that are not the floor's, someone on stairs, if no one is yet: up a wall
+  // and along it, it is what the pile is for (the best way of that kind there is that fits)
+  const climbs = (r: Route) => r.feet.filter((q, j) => j > 0 && Math.abs(q.p[r.up] - r.feet[j - 1].p[r.up]) > 0.01).length / r.feet.length;
+  for (const up of [0, 2]) {
+    if (chosen.some((r) => r.up === up && r.kind !== "fall" && climbs(r) >= 0.3)) continue;
+    const pick = found.find(({ route, cells }) => route.up === up && route.kind !== "fall" && climbs(route) >= 0.3 && !cells.some((c) => taken.has(c)) && fits(route));
+    if (!pick) continue;
+    pick.cells.forEach((c) => taken.add(c));
+    chosen.push(pick.route);
   }
   // walkers: one on each of the ways it was asked for (two on a long round, half round apart)
   // (each as it is, with its size and its stops, tried again: if that goes into the pile, the same at the plain
@@ -226,6 +241,19 @@ export function createPeople(world: { P: number; data: Uint32Array; g: Int32Arra
           }
     return true;
   };
+  // a sitter laid a new way is kept only if its body and head stay out of the pile (and its legs for most of it)
+  const sitsClear = (s: Sitter) => {
+    let limbs = 0;
+    for (let t = 0; t < 24; t++)
+      for (const [n, [a, b, r]] of poseInWorld(s, t / 24, H).entries()) {
+        if (n === 1 || r === 0) continue;
+        const into = inside(a) || inside(mul(add(a, b), 0.5)) || inside(b);
+        if (into && n <= 3) return false;
+        if (into) limbs++;
+      }
+    return limbs <= 24 * 2;
+  };
+  const sideways = rng(options.seed ^ 0x3c6ef372); // (its own numbers, so that the rest come out as they did)
   const seat = (s: Sitter) => {
     if (figures.length >= MOST / 2) return;
     if (!clear(s)) return void turned.away++;
@@ -241,13 +269,36 @@ export function createPeople(world: { P: number; data: Uint32Array; g: Int32Arra
         const [sits, aside, swing, begin, cloth, phone] = [rand(), rand(), rand(), rand(), rand(), rand()];
         const lo = ((arch >> 16) & 31) / 31;
         const half = ((arch >> 11) & 31) / 31;
-        if (!(arch & 1) || (w !== 2 && lo === 0) || sits >= options.sitters) continue;
+        if (!(arch & 1) || (w !== 2 && lo === 0)) continue;
+        // (some of the upright windows, as many as asked for; and every window that is not upright, and every hole:
+        // those are the ones who sit the other ways up, and there are few of them)
+        const upright = w !== 2 && frame([0, 0, 0], (arch >> 1) & 63).way([0, 1, 0])[1] > 0.5;
+        if (upright && sits >= options.sitters) continue;
         const below = w === 2 ? 1 : (arch >> 7) & 15;
         // (the hole this is, to those whose floor the face is: the cell before it)
         const [hi, hk] = w === 3 ? [i + 1, k] : w === 4 ? [i, k + 1] : [i, k];
         if (fallen.has(`${hi % P},${hk % P},${g[c] - below + 1}`)) continue;
         corner[1] = g[c] - below - i - k;
-        seat({ kind: "sitter", frame: frame(corner, (arch >> 1) & 63), lo, aside: (aside - 0.5) * Math.max(0, half * 2 - 0.3 * H) * 0.8, swings: 6 + Math.floor(swing * 8), phase: begin, suit: cloth, phone: phone < 0.3 });
+        const room = frame(corner, (arch >> 1) & 63);
+        const sitter: Sitter = { kind: "sitter", frame: room, lo, aside: (aside - 0.5) * Math.max(0, half * 2 - 0.3 * H) * 0.8, swings: 6 + Math.floor(swing * 8), phase: begin, suit: cloth, phone: phone < 0.3 };
+        // Two in three of those in upright windows sit across them instead, on a side, their back to the other: so they sit
+        // on a wall, as those do who walk the walls. Which side: the one whose up is a floor's up (+x or +z). (Laid
+        // a quarter turn round the window's depth: their up is across it, their across is up it)
+        const top = ((arch >> 21) & 31) / 31;
+        // (of two windows joined in one cube, always the one toward +z: one sits up, the other across)
+        const across = arch >>> 31 ? w === 4 : sideways() < 0.67;
+        if (upright && across && half >= 0.15 && top - half - lo > 0.3 * H)
+          for (const turn of [1, -1]) {
+            const at = (q: V): V => (turn > 0 ? [q[1], 1 - q[0], q[2]] : [1 - q[1], q[0], q[2]]);
+            const way = (d: V): V => (turn > 0 ? [d[1], -d[0], d[2]] : [-d[1], d[0], d[2]]);
+            if (Math.max(...room.way(way([0, 1, 0]))) < 0.5) continue;
+            // (its seat a little above the sill, along the side: its across is the window's up, one way or the other)
+            const up = lo + 0.14 * H + (top - half - lo - 0.28 * H) * aside;
+            const turned: Sitter = { ...sitter, frame: { at: (q) => room.at(at(q)), way: (d) => room.way(way(d)) }, lo: 0.5 - half, aside: turn > 0 ? 0.5 - up : up - 0.5 };
+            if (sitsClear(turned)) Object.assign(sitter, turned);
+            break;
+          }
+        seat(sitter);
       }
     }
   return figures;
@@ -520,7 +571,7 @@ function stroll(f: Walker, playhead: number, H0: number): Posed {
       // on comes in from out of all bounds, so its coming is no jump)
       if (hold.bears <= 0) continue;
       const across = flat(sub(hold.ankle, hipJoint(hold.at, q.sign)));
-      const short = reach * (1 - 0.06 * ease(hold.pushing));
+      const short = reach * (1 - 0.02 * ease(hold.pushing));
       height = Math.min(height, dot(hold.ankle, up) + Math.sqrt(Math.max(short * short - dot(across, across), 0)) + hold.slack);
     }
   const hips = add(over, up, height);

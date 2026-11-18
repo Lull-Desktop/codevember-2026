@@ -1,4 +1,5 @@
-// node tools/stairs-closeup.mjs <dir> <figure id> <frames> <from> <to> : follows a figure at zoom 4, frames of the loop between two moments
+// node tools/stairs-closeup.mjs <dir> <figure id> <frames> <from> <to> : follows a figure at zoom 4, frames of the loop between two moments.
+// UPRIGHT=0 goes to it and lets go, leaving the world unturned (so its gravity shows)
 import { chromium } from "playwright-core";
 import fs from "node:fs";
 import os from "node:os";
@@ -19,6 +20,10 @@ fs.mkdirSync(dir, { recursive: true });
 for (let n = 0; n < +frames; n++) {
   await page.evaluate((hold) => { window.__stairs.state.hold = hold; }, +from + ((+to - +from) * n) / +frames);
   await page.waitForTimeout(n === 0 ? 3000 : 700);
+  if (n === 0 && process.env.UPRIGHT === "0") {
+    await page.evaluate(() => { const r = window.__stairs; r.eye.follow = -1; r.eye.aim = 0; r.eye.zoomAim = 4; });
+    await page.waitForTimeout(2500);
+  }
   fs.writeFileSync(`${dir}/${String(n).padStart(4, "0")}.png`, await page.screenshot());
 }
 console.log("done");

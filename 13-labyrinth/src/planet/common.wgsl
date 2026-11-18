@@ -273,12 +273,13 @@ fn onFrom(o0: vec3f, d0: vec3f) -> Seen {
   return s;
 }
 // what a ray that is not met sees: the sky, and the sun itself if gold turned it there. (Seen in gold the sky is
-// made brighter, `metal.w` times: on the flat pile gold mostly faces more of the pile, on a ball it mostly faces
-// the sky, and a dim sky in it looked like dull bronze)
-fn away(d: vec3f, mirrored: bool) -> vec3f {
+// made brighter, `metal.w` times, for the eye only: on the flat pile gold mostly faces more of the pile, on a ball
+// it mostly faces the sky, and a dim sky in it looked like dull bronze. The light gold throws onto the clay
+// about it is as it is)
+fn away(d: vec3f, mirrored: bool, shown: bool) -> vec3f {
   var c = sky(d);
   if (mirrored) {
-    c *= U.metal.w;
+    if (shown) { c *= U.metal.w; }
     if (dot(d, U.sun.xyz) > cos(U.sun.w)) { c += U.sunTone.rgb / (2.0 * PI * (1.0 - cos(U.sun.w))); }
   }
   return c;
@@ -306,7 +307,7 @@ fn sample(here: vec3f, n0: vec3f) -> vec3f {
     let s = onFrom(o, about(n));
     carry *= s.carry;
     if (!s.hit.met) {
-      got += carry * away(s.d, s.mirrored);
+      got += carry * away(s.d, s.mirrored, false);
       break;
     }
     if (s.hit.what == 8u) {

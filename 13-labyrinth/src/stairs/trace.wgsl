@@ -24,7 +24,7 @@ struct Params {
   clay: vec4f,
   glow: vec4f, // the light of a lit room; w: how many of the rooms are lit
   metal: vec4f, // the colour of the polished cubes; w: how rough their polish is
-  mix: vec4f, // how many columns are polished, how many small cubes, and a number from the pile's seed
+  mix: vec4f, // how many columns are polished, how many small cubes, a number from the pile's seed, and how bright the sky is seen in them
 }
 @group(0) @binding(0) var<uniform> U: Params;
 @group(0) @binding(1) var<storage, read> cells: array<u32>;
@@ -376,6 +376,13 @@ fn sky(d: vec3f) -> vec3f {
   let up = clamp(dot(d, normalize(vec3f(0.35, 1.0, 0.35))) * 0.5 + 0.5, 0.0, 1.0);
   return mix(U.skyLow.rgb, U.skyHigh.rgb, up);
 }
+// the sky as gold shows it. The pile falls away as it goes along x and z, so gold that leans that way shows the
+// sky below the horizon, its dark bottom, and it looked like soot in the folds: in gold the sky is never lower
+// than at the horizon, and `mix.w` times brighter
+fn skyInGold(d: vec3f) -> vec3f {
+  let up = clamp(dot(d, normalize(vec3f(0.35, 1.0, 0.35))) * 0.5 + 0.5, 0.5, 1.0);
+  return mix(U.skyLow.rgb, U.skyHigh.rgb, up) * U.mix.w;
+}
 
 // any direction, all alike
 fn anyWay() -> vec3f {
@@ -452,7 +459,7 @@ fn frag(@builtin(position) at: vec4f) -> @location(0) vec4f {
       return vec4f(mix(textureLoad(before, px, 0).rgb, select(vec3f(0.0), hit.n * 0.5 + 0.5, hit.met), 1.0 / (U.frame + 1.0)), 1.0);
     }
     if (!hit.met) {
-      light += carry * sky(d);
+      light += carry * select(sky(d), skyInGold(d), mirrored);
       if (mirrored && dot(d, U.sun.xyz) > cos(U.sun.w)) { light += carry * U.sunTone.rgb / disc; }
       break;
     }

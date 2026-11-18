@@ -53,6 +53,7 @@ export const look = {
   polish: 1, // how many of the small cubes are polished
   metalTone: "#e8c27e",
   blur: 0.06, // how far from a true mirror the polish is
+  shine: 3, // how much brighter the sky is, seen in gold (never darker than at the horizon)
   // the people
   ...peopleDefaults,
   onWay: 4, // walkers on the way through the whole pile
@@ -104,6 +105,7 @@ const ranges: Record<string, [number, number, number?]> = {
   onWay: [0, 8, 1],
   polish: [0, 1, 0.01],
   blur: [0, 0.6, 0.01],
+  shine: [0, 4, 0.05],
   exposure: [0.2, 3, 0.01],
   grain: [0, 0.2, 0.005],
   zoom: [0.25, 4, 0.01],
@@ -286,7 +288,7 @@ const sketch: Sketch<"webgpu"> = async ({ wrap, canvas }) => {
         look.faces ? ((look as unknown as { probe?: number }).probe ?? 1) : 0,
         ...tone(look.glowTone, look.glowPower), look.glow,
         ...tone(look.metalTone), look.blur,
-        look.gold, look.polish, (look.seed * 2654435761) % 4294967296, 0,
+        look.gold, look.polish, (look.seed * 2654435761) % 4294967296, look.shine,
       ]),
     );
   };

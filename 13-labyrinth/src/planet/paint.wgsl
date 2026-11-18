@@ -75,7 +75,7 @@ fn frag(@builtin(position) at: vec4f) -> @location(0) vec4f {
     if (!hit.met && !seen.mirrored) { continue; }
     var c = vec3f(0.0);
     if (!hit.met) {
-      c = away(seen.d, true);
+      c = away(seen.d, true, true);
     } else if (hit.what == 8u) {
       c = U.glow.rgb;
     } else if (hit.what == 9u) {
