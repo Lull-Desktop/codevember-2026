@@ -6,10 +6,11 @@ import * as waltz from "./waltz.ts";
 
 /**
  * Which show: the waltz (the default; a real recording's stretch of the Blue Danube, a drum for each pitch
- * class), `?show=danube` (its tune synthesised, a drum for each note) or `?show=beats` (silent, on a beat)
+ * class), `?show=danube` (its tune synthesised, a drum for each note), `?show=beats` (silent, on a beat) or
+ * `?show=manual` (nothing moves till one presses on the sheet: see touch.ts)
  */
 const asked = typeof location !== "undefined" ? new URLSearchParams(location.search).get("show") : null;
-export const SHOW: "beats" | "danube" | "waltz" = asked === "danube" || asked === "beats" ? asked : "waltz";
+export const SHOW: "beats" | "danube" | "waltz" | "manual" = asked === "danube" || asked === "beats" || asked === "manual" ? asked : "waltz";
 
 // everything happens on a beat grid: 96 bpm, 32 beats (8 bars of 4) to the period; the Danube 120 bpm,
 // 33 beats (11 bars of 3)
@@ -76,7 +77,8 @@ const REST = [
   [-0.05, -0.11, -0.13, -0.15, -0.16, -0.16, -0.15, -0.14, -0.11],
   [-0.02, -0.09, -0.11, -0.13, -0.14, -0.15, -0.15, -0.13, -0.08],
 ];
-function restY(x: number, z: number) {
+/** The resting sheet's height at x z */
+export function restY(x: number, z: number) {
   const u = Math.min(Math.max((x / physics.size + 0.5) * 8, 0), 7.999);
   const v = Math.min(Math.max((z / physics.size + 0.5) * 8, 0), 7.999);
   const i = Math.floor(u);
@@ -87,7 +89,7 @@ function restY(x: number, z: number) {
   return (r(i, j) * (1 - fu) + r(i + 1, j) * fu) * (1 - fv) + (r(i, j + 1) * (1 - fu) + r(i + 1, j + 1) * fu) * fv;
 }
 
-const HIDE = -0.3;
+export const HIDE = -0.3;
 
 type Pop = { at: number; x: number; z: number; lift: number; hold?: number; up?: number; down?: number; yaw?: number; tilt?: number };
 /** Pops of one shape: up from under the sheet to peak on beat `at`, hold, drop back under */
@@ -337,7 +339,7 @@ function buildWaltz(edits: NoteEdits) {
 const tracksOf = (acts: Act[]): Abs[][] => acts.map((act) => act.keys.map(([b, x, lift, z, yaw, tilt, ease]): Abs => [b * UNIT, x, restY(x, z) + lift - act.top, z, yaw, tilt, ease]));
 
 let built = SHOW === "waltz" ? buildWaltz({}) : undefined;
-let ACTS = built ? built.acts : SHOW === "danube" ? DANUBE_ACTS : BEAT_ACTS;
+let ACTS = built ? built.acts : SHOW === "danube" ? DANUBE_ACTS : SHOW === "manual" ? [] : BEAT_ACTS;
 /** The keys in seconds and absolute height */
 let TRACKS: Abs[][] = tracksOf(ACTS);
 
@@ -351,7 +353,7 @@ export function setWaltzEdits(edits: NoteEdits) {
   TRACKS = tracksOf(ACTS);
 }
 
-function quat(yaw: number, tilt: number, axis: [number, number, number]): [number, number, number, number] {
+export function quat(yaw: number, tilt: number, axis: [number, number, number]): [number, number, number, number] {
   // tilt round `axis` first, then yaw round y
   const l = Math.hypot(...axis) || 1;
   const t = (tilt * Math.PI) / 360;

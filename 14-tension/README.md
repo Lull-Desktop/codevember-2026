@@ -9,7 +9,7 @@ portless            # https://tension.localhost
 npm run dev
 ```
 
-Three shows (the show menu, or `?show=`):
+Four shows (the show menu, or `?show=`):
 
 - **waltz** (the default): `public/waltz.flac`, 1:56.70 to 2:14.68 of a recording of the Blue Danube (the
   first theme's second half, bars 17-32, and its cadence G, A, D), with 0.3 s of silence before and 1.0 s
@@ -31,6 +31,12 @@ Three shows (the show menu, or `?show=`):
   other beat, a cube twisting on each beat, a ring with drums on the off beats, the face (mine, the distance
   field from day 3, baked by `tools/bakeface.mjs` into `public/face.sdf`) looking about, and an egg.
   Keys are `[beat, x, lift, z, yaw, tilt, ease]` in `src/cloth/show.ts`.
+- **manual**: nothing moves till one presses on the sheet (`src/cloth/touch.ts`). Press, and a shape comes up
+  under the pointer there (mostly a drum, now and then a ball, a cube on its corner or an egg); drag, and it
+  follows under the cloth (at most 2 m/s, so a flick can't tear it); let go, and it drops faster than the
+  cloth falls. One shape per pointer, so each finger on a phone gets one. The pointer is cast onto the
+  resting sheet (a ray to the plane, then corrected a few times for the sheet's height there). Here the
+  left button and one finger are the hand's; orbit with the right button or two fingers.
 
 Two looks (the look menu, or `?look=`): **c** (default), seen from above, an off-centre spot sweeping the
 sheet from a hot far corner to the near edge, light from below coming through (white through one layer, red

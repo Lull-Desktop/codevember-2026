@@ -19,20 +19,24 @@ import {
   Matrix4,
   Mesh,
   MeshBasicNodeMaterial,
+  MOUSE,
   NearestFilter,
   OrthographicCamera,
   PerspectiveCamera,
+  Raycaster,
   RenderPipeline,
   RenderTarget,
   RGBAFormat,
   Scene,
   StorageTexture,
+  TOUCH,
   Vector2,
   Vector3,
   Vector4,
   WebGPURenderer,
 } from "three/webgpu";
-import { BEAT, makePins, PERIOD, pushersAt, setWaltzEdits, SHOW, sync, waltzNotes, type NoteEdits } from "./show.ts";
+import { BEAT, makePins, PERIOD, pushersAt, restY, setWaltzEdits, SHOW, sync, waltzNotes, type NoteEdits } from "./show.ts";
+import { Touch } from "./touch.ts";
 import { Music, Recording } from "./music.ts";
 import { ClothSim, physics, type Face } from "./sim.ts";
 
@@ -759,10 +763,10 @@ const sketch: Sketch<"webgpu"> = async ({ wrap, canvas, width, height, pixelRati
       refresh(true);
       gui.controllersRecursive().forEach((c) => c.updateDisplay());
     });
-  // the show: the waltz (the recording), the Danube sung by a little synth, or the silent beat show
-  // (reloads, the whole timeline changes)
+  // the show: the waltz (the recording), the Danube sung by a little synth, the silent beat show, or by
+  // hand (reloads, the whole timeline changes)
   gui
-    .add({ show: SHOW }, "show", { "waltz, recording": "waltz", "danube, synth": "danube", "beats, silent": "beats" })
+    .add({ show: SHOW }, "show", { "waltz, recording": "waltz", "danube, synth": "danube", "beats, silent": "beats", "manual, by hand": "manual" })
     .onChange((name: string) => {
       const url = new URL(location.href);
       url.searchParams.set("show", name);
@@ -898,6 +902,53 @@ const sketch: Sketch<"webgpu"> = async ({ wrap, canvas, width, height, pixelRati
     if (import.meta.env.DEV && !query.has("loop")) closeEditor = (await import("./editor.ts")).noteEditor(() => state.t, edits, "waltz.flac");
   }
 
+  // the manual show: press on the sheet and a shape comes up there; drag and it follows; let go and it
+  // drops. The left button (one finger) is the hand's, so orbiting moves to the right (two fingers)
+  const touch = SHOW === "manual" ? new Touch() : undefined;
+  const ray = new Raycaster();
+  /** where the pointer meets the resting sheet (strict: only over the sheet) */
+  const onSheet = (e: PointerEvent, strict: boolean): [number, number] | undefined => {
+    const r = canvas.getBoundingClientRect();
+    ray.setFromCamera(new Vector2(((e.clientX - r.left) / r.width) * 2 - 1, -((e.clientY - r.top) / r.height) * 2 + 1), camera);
+    const { origin: o, direction: d } = ray.ray;
+    if (d.y > -1e-4) return;
+    let [x, y, z] = [0, 0, 0];
+    // onto the plane at the sheet's height there, a few times over as that height changes with x z
+    for (let i = 0; i < 4; i++) {
+      const s = (y - o.y) / d.y;
+      x = o.x + d.x * s;
+      z = o.z + d.z * s;
+      y = restY(x, z);
+    }
+    const half = physics.size / 2;
+    return strict && (Math.abs(x) > half || Math.abs(z) > half) ? undefined : [x, z];
+  };
+  const touchHint = document.createElement("div");
+  const onDown = (e: PointerEvent) => {
+    if (e.button !== 0) return;
+    const p = onSheet(e, true);
+    if (!p) return;
+    touch!.press(e.pointerId, ...p);
+    touchHint.remove();
+  };
+  const onMove = (e: PointerEvent) => {
+    const p = onSheet(e, false);
+    if (p) touch!.move(e.pointerId, ...p);
+  };
+  const onUp = (e: PointerEvent) => touch!.release(e.pointerId);
+  if (touch) {
+    controls.mouseButtons = { LEFT: -1 as MOUSE, MIDDLE: MOUSE.DOLLY, RIGHT: MOUSE.ROTATE };
+    controls.touches = { ONE: -1 as TOUCH, TWO: TOUCH.DOLLY_ROTATE };
+    canvas.addEventListener("pointerdown", onDown);
+    window.addEventListener("pointermove", onMove);
+    window.addEventListener("pointerup", onUp);
+    window.addEventListener("pointercancel", onUp);
+    touchHint.textContent = "press on the sheet, drag, let go";
+    touchHint.style.cssText =
+      "position:fixed;left:50%;top:20px;transform:translateX(-50%);padding:6px 12px;border-radius:6px;background:#0008;color:#fffc;font:12px/1.4 ui-monospace,monospace;pointer-events:none;z-index:10";
+    document.body.appendChild(touchHint);
+  }
+
   // one frame of sim. At each period's start the sheet is kept; over the last stretch of the period
   // it is drawn softly back towards that, so the end meets the start (the pull vanishes once it does)
   const tick = () => {
@@ -907,9 +958,10 @@ const sketch: Sketch<"webgpu"> = async ({ wrap, canvas, width, height, pixelRati
     const left = (F - j) * DT;
     const ramp = Math.min(Math.max(1 - left / state.feedFor, 0), 1);
     sim.feed = state.f > F ? state.feed * ramp * ramp : 0;
-    sim.advance(DT, pushersAt(state.t), true, j === 0);
+    if (touch) touch.step(DT);
+    sim.advance(DT, touch ? touch.pushers() : pushersAt(state.t), true, j === 0);
   };
-  Object.assign(window, { __cloth: { key, backLight, presets, look, physics, state, sim, refresh, tick, camera, controls, renderer, pushersAt, music, period: PERIOD, waltzNotes } });
+  Object.assign(window, { __cloth: { key, backLight, presets, look, physics, state, sim, refresh, tick, camera, controls, renderer, pushersAt, music, period: PERIOD, waltzNotes, touch } });
   console.log(`cloth: ${N}x${N} particles, ${physics.substeps} substeps, period ${PERIOD} s`);
 
   // `?loop`: one period run unseen first, after which each period is the same as the last (to ~0.3 mm)
@@ -971,6 +1023,11 @@ const sketch: Sketch<"webgpu"> = async ({ wrap, canvas, width, height, pixelRati
     window.removeEventListener("keydown", startMusic);
     music?.dispose();
     closeEditor?.();
+    touchHint.remove();
+    canvas.removeEventListener("pointerdown", onDown);
+    window.removeEventListener("pointermove", onMove);
+    window.removeEventListener("pointerup", onUp);
+    window.removeEventListener("pointercancel", onUp);
   };
 };
 
