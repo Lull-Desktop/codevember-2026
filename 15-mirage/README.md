@@ -10,12 +10,14 @@ portless            # https://mirage.localhost
 npm run dev         # or a numbered port (the tools expect 5315: npx vite --port 5315)
 ```
 
-Two pages, one program (`<body data-scene>` says which):
+The page is the garden: 180 m a loop, three doors within 70 m of the start, an avenue of mirrors along each way
+(the eye is within 5 m of one three quarters of the time), small dunes underfoot and boulders among them.
+Dragging turns the eye to look about as it flies (up to 65 degrees either side, 25 up, 18 down: `lookWide`,
+`lookUp`, `lookDown`), and let go it comes back to the way (`lookBack`).
 
-- `index.html`: the long flight. 420 m a loop down a wide flat lane, mirrors far apart.
-- `garden.html`: the same things close together. 180 m a loop, at less than half the speed, three doors within
-  70 m of the start, an avenue of mirrors along each way (the eye is within 5 m of one three quarters of the
-  time), small dunes underfoot and boulders among them.
+The first take, the long flight (420 m a loop down a wide flat lane, mirrors far apart), is still in the program
+as `<body data-scene="far">`; it was `index.html` until the garden (once `garden.html`) took its place. Much of
+what follows was worked out on it, and its numbers are given beside the garden's.
 
 ## How it works
 
@@ -173,7 +175,7 @@ the marked pixels, `3` what each pixel cost.
   `ffmpeg -framerate 30 -i output/film/f_%04d.png -vf scale=1024:1024:flags=lanczos -c:v libx264 -crf 18 ...`
 - `node tools/export-blender.mjs`: the world for `blender/` (see its README); `LAPS=0,2` writes only the eye's
   path, `data/path_02.json`.
-- `film.mjs` and `export-blender.mjs` take the garden by default, the others `URL=http://localhost:5315/garden.html`.
+- All of them take `URL` (the dev server on 5315 by default).
 
 ## Not done yet
 

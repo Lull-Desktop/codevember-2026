@@ -4,7 +4,7 @@
 import { chromium } from "playwright-core";
 import fs from "node:fs";
 import os from "node:os";
-const url = process.env.URL ?? "http://localhost:5315/garden.html";
+const url = process.env.URL ?? "http://localhost:5315/";
 const fps = +(process.env.FPS ?? 30);
 // LAPS=0,2: a shorter loop through only those doors (each lap starts where every door leads, so any of them
 // loop): only the eye's path is written, to data/path_<laps>.json, at the full loop's speed and lean

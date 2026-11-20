@@ -2,7 +2,7 @@
 // after (2e-5 of the loop either side), against an ordinary step of the same size just before, and the same
 // again a hundred times nearer the door. The numbers of a pair should be alike. Grain is off for it: its
 // pattern changes sixty times a second, and a door that falls on such a change looks like a jump when it is
-// not. URL (the dev server is expected on 5315; URL=http://localhost:5315/garden.html for the garden), SET.
+// not. URL (the dev server is expected on 5315), SET.
 import { chromium } from "playwright-core";
 import fs from "node:fs";
 import os from "node:os";

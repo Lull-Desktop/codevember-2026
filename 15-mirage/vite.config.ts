@@ -23,6 +23,6 @@ export default defineConfig({
   build: {
     outDir: "./dist",
     assetsDir: ".",
-    rollupOptions: { input: { main: "index.html", garden: "garden.html" } },
+    rollupOptions: { input: { main: "index.html" } },
   },
 });

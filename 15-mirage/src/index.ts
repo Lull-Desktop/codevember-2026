@@ -103,8 +103,9 @@ const shared = `
 @group(0) @binding(20) var ctlD: texture_2d<f32>;
 `;
 
-// which of the two this page is: the long flight ("far"), or the same things close together ("garden")
-const scene = document.body.dataset.scene === "garden" ? "garden" : "far";
+// the garden (the day's page), or with <body data-scene="far"> the first take: the long flight, in git history
+// as index.html before the garden became the page
+const scene = document.body.dataset.scene === "far" ? "far" : "garden";
 
 const defaults = {
   ...worldDefaults,
@@ -194,6 +195,12 @@ const defaults = {
   ahead: 22,
   pitch: 0.04,
   bank: 0.3,
+  // looking about: a drag turns the eye off the way, up to `lookWide` degrees either side, `lookUp` up and
+  // `lookDown` down; let go, and after a moment it comes back, in about `lookBack` seconds
+  lookWide: 65,
+  lookUp: 25,
+  lookDown: 18,
+  lookBack: 1.4,
   // the picture
   exposure: 1.15,
   grain: 0.02,
@@ -322,6 +329,10 @@ const ranges: Record<string, [number, number, number?]> = {
   ahead: [4, 60, 1],
   pitch: [-0.3, 0.3, 0.005],
   bank: [0, 2, 0.05],
+  lookWide: [0, 170, 1],
+  lookUp: [0, 80, 1],
+  lookDown: [0, 80, 1],
+  lookBack: [0.2, 10, 0.1],
   exposure: [0.1, 5, 0.01],
   grain: [0, 0.2, 0.005],
   vignette: [0, 1.5, 0.01],
@@ -471,7 +482,7 @@ const folders: Record<string, string[]> = {
     "vanishFrom",
     "vanishTo",
   ],
-  eye: ["eye", "fov", "ahead", "pitch", "bank"],
+  eye: ["eye", "fov", "ahead", "pitch", "bank", "lookWide", "lookUp", "lookDown", "lookBack"],
   picture: [
     "exposure",
     "grain",
@@ -1396,6 +1407,68 @@ const sketch: Sketch<"webgpu"> = async ({ wrap, canvas }) => {
     return { eye, fore, right, up, vel, lap: k, s };
   };
 
+  // Looking about while flying. A drag turns the eye off the way, the picture following the hand (drag right and
+  // what was on the left comes into view), within `lookWide` either side and `lookUp` / `lookDown`; let go and
+  // after a moment it eases back. Only the eye's look turns: it flies on along the way, and through the doors
+  // as before. A held moment, a film and the tools see the way as it is.
+  const gaze = { yaw: 0, pitch: 0, aimYaw: 0, aimPitch: 0, held: -1, x: 0, y: 0, let: 0, at: 0 };
+  canvas.style.cursor = "grab";
+  canvas.style.touchAction = "none";
+  canvas.addEventListener("pointerdown", (e) => {
+    if (gaze.held >= 0) return;
+    gaze.held = e.pointerId;
+    [gaze.x, gaze.y] = [e.clientX, e.clientY];
+    canvas.setPointerCapture(e.pointerId);
+    canvas.style.cursor = "grabbing";
+  });
+  canvas.addEventListener("pointermove", (e) => {
+    if (e.pointerId !== gaze.held) return;
+    // (an angle a pixel: the picture's height is `fov`, so the ground under the hand stays under it)
+    const k = (look.fov * Math.PI) / 180 / canvas.clientHeight;
+    const rad = Math.PI / 180;
+    gaze.aimYaw -= (e.clientX - gaze.x) * k;
+    gaze.aimPitch += (e.clientY - gaze.y) * k;
+    gaze.aimYaw = Math.max(-look.lookWide * rad, Math.min(look.lookWide * rad, gaze.aimYaw));
+    gaze.aimPitch = Math.max(-look.lookDown * rad, Math.min(look.lookUp * rad, gaze.aimPitch));
+    [gaze.x, gaze.y] = [e.clientX, e.clientY];
+  });
+  const letGo = (e: PointerEvent) => {
+    if (e.pointerId !== gaze.held) return;
+    gaze.held = -1;
+    gaze.let = performance.now();
+    canvas.style.cursor = "grab";
+  };
+  canvas.addEventListener("pointerup", letGo);
+  canvas.addEventListener("pointercancel", letGo);
+  // where the look is now: it follows the hand a little behind (no jerks from a jerky mouse), and once let go
+  // for half a second the aim goes back to the way ahead
+  const gazeNow = (now: number) => {
+    const dt = Math.min(0.1, Math.max(0, (now - (gaze.at || now)) / 1000));
+    gaze.at = now;
+    if (gaze.held < 0 && now - gaze.let > 500) {
+      const back = Math.exp(-dt / Math.max(0.05, look.lookBack / 3));
+      gaze.aimYaw *= back;
+      gaze.aimPitch *= back;
+    }
+    const follow = 1 - Math.exp(-dt / 0.09);
+    gaze.yaw += (gaze.aimYaw - gaze.yaw) * follow;
+    gaze.pitch += (gaze.aimPitch - gaze.pitch) * follow;
+  };
+  // the eye of `pose`, turned by the look: about the upright first (toward its right), then up
+  const turned = <P extends { fore: V3; right: V3; up: V3 }>(p: P): P => {
+    if (Math.abs(gaze.yaw) < 1e-5 && Math.abs(gaze.pitch) < 1e-5) return p;
+    const aboutUp = (v: V3, a: number): V3 => {
+      const [c, s] = [Math.cos(a), Math.sin(a)];
+      // (Rodrigues about (0, 1, 0); a turn of +a takes the way ahead toward the right, as `right` lies)
+      return [v[0] * c + v[2] * s, v[1], -v[0] * s + v[2] * c];
+    };
+    const side = Math.sign(dot(aboutUp(p.fore, 0.01), p.right)) || 1;
+    let [fore, right, up] = [p.fore, p.right, p.up].map((v) => aboutUp(v, gaze.yaw * side));
+    const [c, s] = [Math.cos(gaze.pitch), Math.sin(gaze.pitch)];
+    [fore, up] = [unit(sum(scaled(fore, c), scaled(up, s))), unit(sum(scaled(up, c), scaled(fore, -s)))];
+    return { ...p, fore, right, up };
+  };
+
   // Which glasses and boulders can show in each tile of the screen, a bit each, for trace.wgsl: each is in a
   // ball, a ball is seen as a round patch, and the tiles that patch's box touches get the bit.
   const tile = (
@@ -1748,11 +1821,14 @@ const sketch: Sketch<"webgpu"> = async ({ wrap, canvas }) => {
       (skyRow < SKY[1] ? 1 : 0) +
       (look.baked && !litAt.done ? 1 : 0);
     if (benching) return;
+    const free = state.hold === null && !recording;
+    if (free) gazeNow(performance.now());
     const eye = frame(
       state.hold ?? playhead,
       context.getCurrentTexture().createView(),
       true,
       true,
+      free,
     );
     drawPlan(eye.eye);
     stats.update();
@@ -1765,8 +1841,9 @@ const sketch: Sketch<"webgpu"> = async ({ wrap, canvas }) => {
     to: GPUTextureView,
     whole: boolean,
     timed: boolean,
+    looking = false,
   ) => {
-    const eye = pose(ph);
+    const eye = looking ? turned(pose(ph)) : pose(ph);
     const [w, h] = [traced!.width, traced!.height];
     const tanH = Math.tan((look.fov * Math.PI) / 360);
     still();

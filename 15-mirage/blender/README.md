@@ -1,6 +1,6 @@
 # The garden in Blender
 
-The page's garden (`../garden.html`) as a Cycles scene: the same mirrors, doors, rocks, ground and the eye's way,
+The page's garden (`../index.html`) as a Cycles scene: the same mirrors, doors, rocks, ground and the eye's way,
 exported from the page, with what the page could not afford added.
 
 ```sh

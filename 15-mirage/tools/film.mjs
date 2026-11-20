@@ -3,13 +3,13 @@
 // taken. size is the picture's (default 1024x1024); DPR (default 2) draws it that many times finer, for
 // ffmpeg to shrink back (four rays to a pixel at 2). LAPS=0,2: a shorter loop through only those doors (any of
 // them loop: every lap starts where every door leads), at the full loop's speed and lean. FPS (30), FROM / TO
-// (frames, to do part of it), SET as in shot.mjs, URL (default the garden).
+// (frames, to do part of it), SET as in shot.mjs, URL.
 import { chromium } from "playwright-core";
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 const [dir = "film", size = "1024x1024"] = process.argv.slice(2);
-const url = process.env.URL ?? "http://localhost:5315/garden.html";
+const url = process.env.URL ?? "http://localhost:5315/";
 const fps = +(process.env.FPS ?? 30);
 const dpr = +(process.env.DPR ?? 2);
 const laps = process.env.LAPS ? process.env.LAPS.split(",").map(Number) : null;

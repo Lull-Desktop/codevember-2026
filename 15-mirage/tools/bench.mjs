@@ -1,7 +1,7 @@
 // node tools/bench.mjs [WxH]: how long the GPU takes over a frame (milliseconds), at moments of the loop, for
 // ways of setting it up given in RUNS (a JSON list of look values, each a run; default: the light baked and
 // not). Frames are given to the GPU sixty at a time so that it runs at its full clock; see `bench` in index.ts.
-// MOMENTS, DPR (2 is the laptop's screen), URL (garden: http://localhost:5315/garden.html).
+// MOMENTS, DPR (2 is the laptop's screen), URL.
 import { chromium } from "playwright-core";
 import fs from "node:fs";
 import os from "node:os";
