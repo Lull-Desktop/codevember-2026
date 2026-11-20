@@ -800,7 +800,12 @@ fn vert(@builtin(vertex_index) i: u32) -> @builtin(position) vec4f {
 
 // nothing brighter than `bright` (the sun is, thousands of times), but still its own colour
 fn tame(c: vec3f) -> vec3f {
-  return c * min(1.0, P.tune.w / max(max(c.r, c.g), max(c.b, 1e-6)));
+  // (a colour that is not a number, or is endless, is none: on some GPUs, now and then, a pixel comes out so;
+  // one such pixel goes into every halving of the glow, and comes back as a black octagon a quarter of the
+  // screen across. Asked by its bits, as a compiler may take x != x to be false.)
+  let bad = (bitcast<vec3u>(c) & vec3u(0x7f800000u)) == vec3u(0x7f800000u);
+  let k = max(select(c, vec3f(0.0), bad), vec3f(0.0));
+  return k * min(1.0, P.tune.w / max(max(k.r, k.g), max(k.b, 1e-6)));
 }
 
 // A pixel is one ray through its middle. Where that ray passed within a pixel of an edge (of a glass, of a
