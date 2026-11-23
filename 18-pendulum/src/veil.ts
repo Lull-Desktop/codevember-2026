@@ -692,7 +692,8 @@ const sketch: Sketch<"webgpu"> = async ({ wrap, canvas, width, height, pixelRati
   };
   let f = 0;
   const t = () => f * dt;
-  const settleRest = () => {
+  const SETTLE = 240; // frames
+  const settleStart = () => {
     Object.assign(cloth, {
       density: look.density,
       grip: look.grip,
@@ -706,8 +707,8 @@ const sketch: Sketch<"webgpu"> = async ({ wrap, canvas, width, height, pixelRati
       self: look.self,
     });
     rest.reset();
-    for (let k = 0; k < 240; k++) rest.advance(1 / 120, [0, 0, -10], [0, 0, -10], look.ballR, k === 239);
   };
+  const settleStep = (k: number) => rest.advance(1 / 120, [0, 0, -10], [0, 0, -10], look.ballR, k === SETTLE - 1);
   // the ball's size changes as the page runs: nothing starts again, it eases to its new size and the cloths feel
   // it. A bigger one needs its cloths awake sooner, and that is only changed while no frame is settling for its
   // hit (there the two schedules agree, so nothing jumps): up to a second or two later
@@ -737,16 +738,20 @@ const sketch: Sketch<"webgpu"> = async ({ wrap, canvas, width, height, pixelRati
     if (size.at >= BALL_EASE) size.need = wakeFor(size.to); // (a smaller ball: its cloths may sleep longer again)
     return look.ballR - was;
   };
-  const restart = () => {
+  const begin = () => {
     pend = makePendulum(look.length, look.amp);
     timing();
     look.ballR = size.from = size.to;
     size.at = BALL_EASE;
     wake = size.need = wakeFor(look.ballR);
     buildWobble();
-    settleRest();
+    settleStart();
     f = 0;
     for (const s of slots) s.k = -1;
+  };
+  const restart = () => {
+    begin();
+    for (let k = 0; k < SETTLE; k++) settleStep(k);
   };
   // the sims' GPU time, now and then, for the performance readout
   const canTime = device.features.has("timestamp-query");
@@ -826,7 +831,13 @@ const sketch: Sketch<"webgpu"> = async ({ wrap, canvas, width, height, pixelRati
     f++;
     return out;
   };
-  restart();
+  // at load the same, two frames at a time: all at once it is over a second of the card's work in one lump, and
+  // nothing else gets onto the screen till it is done (the loader's ball stood still in the air)
+  begin();
+  for (let k = 0; k < SETTLE; k++) {
+    settleStep(k);
+    if (k % 2) await device.queue.onSubmittedWorkDone();
+  }
 
   const place = () => {
     const time = t();
@@ -1212,6 +1223,16 @@ const sketch: Sketch<"webgpu"> = async ({ wrap, canvas, width, height, pixelRati
     }
     place();
     st.render();
+    // the loader goes when a picture is on the screen, not when it has been asked for: the first one has every shader
+    // to build, and the frames come back from here long before the card has drawn them
+    if (loader && st.state.frame >= 3) {
+      const gone = loader;
+      loader = null;
+      device.queue.onSubmittedWorkDone().then(() => {
+        gone.classList.add("done");
+        setTimeout(() => gone.remove(), 1500);
+      });
+    }
     // the readouts
     const now = performance.now();
     if (lastFrame > 0) {
@@ -1231,6 +1252,7 @@ const sketch: Sketch<"webgpu"> = async ({ wrap, canvas, width, height, pixelRati
       });
     }
   };
+  let loader = document.getElementById("loader");
   let lastFrame = 0, framesSince = 0, gpuBusy = false;
   wrap.resize = ({ width, height }) => st.resize(width, height);
   wrap.unload = () => {
