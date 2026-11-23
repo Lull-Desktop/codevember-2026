@@ -418,6 +418,7 @@ const sketch: Sketch<"webgpu"> = async ({ wrap, canvas, width, height, pixelRati
   const state = { hold: -1, frame: 0, pause: false, still: false, skipLight: false };
   Object.assign(window, { __kelp: { look, state, refresh, frameUp, stems, rocks, fish, light, camera, controls, renderer, scene } });
   const frames = Math.round((duration / 1000) * 60);
+  const loader = document.getElementById("loader");
   const up = new Vector3(0, 1, 0);
   const sharpAt = new Vector3();
 
@@ -449,6 +450,13 @@ const sketch: Sketch<"webgpu"> = async ({ wrap, canvas, width, height, pixelRati
     pipeline.render();
     stats.update();
     state.frame++;
+    // the loader goes when a picture is on the screen, not when it has been asked for: the first one has every
+    // shader to build, and the frames come back from here long before the card has drawn them. Four, so that the
+    // sun map (every other frame) is in it
+    if (state.frame === 4 && loader && !loader.classList.contains("done")) {
+      const device = (renderer.backend as unknown as { device?: GPUDevice }).device;
+      (device ? device.queue.onSubmittedWorkDone() : Promise.resolve()).then(() => loader.classList.add("done"));
+    }
   };
 
   wrap.resize = ({ width, height }) => {

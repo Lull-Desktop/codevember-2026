@@ -336,3 +336,17 @@ screen has; 0.75 was a fifth to a third quicker) and `sun map every other frame`
 to a third). Neither is used when a moment is held (`state.hold`, as the tools do) or when ssam says it is
 recording: then the picture is whole. That switch to whole while ssam records has not been tried; if a
 recording comes out the wrong size, set `resolution` to 1 first.
+
+## While it loads
+
+The page says `kelping` till its first picture is on the screen: each letter is the top of a stipe that sways
+from its foot, the next a little after the last, as a swell goes along a bed of weed. It is in `index.html`
+itself, markup and CSS, so it is there before any script is.
+
+- Most of the wait (up to four seconds the first time, next to nothing after) is the first frame, which has
+  every shader to build and holds the page's thread while it does. So nothing in the loader is driven by a
+  script: only `transform` and `opacity` are animated, on HTML elements, which the browser goes on moving by
+  itself. (Held in a loop for 2.5 s, the page still gave 126 different frames of it.)
+- It goes when the card has drawn the first four frames (`device.queue.onSubmittedWorkDone()`), not when they
+  were asked for, and fades into the picture already moving under it.
+- Without WebGPU, or if something throws before the picture comes, it says so and does not sway for ever.
