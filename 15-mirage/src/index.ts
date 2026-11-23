@@ -1809,6 +1809,7 @@ const sketch: Sketch<"webgpu"> = async ({ wrap, canvas }) => {
     return true;
   };
 
+  const loader = document.getElementById("loader");
   wrap.render = ({ playhead, recording }) => {
     if (!state.ready) return;
     if (!pace(performance.now(), recording)) return;
@@ -1833,6 +1834,10 @@ const sketch: Sketch<"webgpu"> = async ({ wrap, canvas }) => {
     drawPlan(eye.eye);
     stats.update();
     state.frame++;
+    // the loader goes when a picture is on the screen, not when it has been asked for: the first one has every
+    // shader to build, and the frames come back from here long before the GPU has drawn them
+    if (state.frame === 3 && loader && !loader.classList.contains("done"))
+      device.queue.onSubmittedWorkDone().then(() => loader.classList.add("done"));
   };
 
   // One frame, onto `to`: the trace and, unless `whole` is false, the edges, the glow and the showing.
