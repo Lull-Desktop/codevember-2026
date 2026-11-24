@@ -1,0 +1,109 @@
+{
+  "schemaVersion": 1,
+  "enabled": true,
+  "id": "codevember.fold",
+  "slug": "fold",
+  "name": "Fold",
+  "version": "1.0.0",
+  "description": "Folding paper chains that recede into a lit vanishing point.",
+  "author": "Yuri Artiukh",
+  "license": "CC-BY-4.0",
+  "source": {
+    "html": "index.html",
+    "module": "src/index.ts"
+  },
+  "entry": "lull/entry.ts",
+  "theme": {
+    "background": "#333333"
+  },
+  "capabilities": [
+    "wallpaper.viewport",
+    "wallpaper.params",
+    "wallpaper.script"
+  ],
+  "performance": {
+    "tier": "high",
+    "targetFps": 60
+  },
+  "compatibility": {
+    "hostApi": 1,
+    "platforms": [
+      "windows"
+    ]
+  },
+  "requires": [
+    "webgpu"
+  ],
+  "assets": [],
+  "hide": [
+    ".lil-gui",
+    "#stats",
+    ".pages",
+    ".balls",
+    ".hud"
+  ],
+  "assetsLicense": "ok",
+  "params": [
+    {
+      "key": "chains",
+      "type": "number",
+      "label": "链数 / Chains",
+      "default": 16,
+      "min": 1,
+      "max": 16,
+      "step": 1,
+      "binding": {
+        "property": "chains"
+      },
+      "apply": "finish"
+    },
+    {
+      "key": "spread",
+      "type": "number",
+      "label": "链头错开 / Spread",
+      "default": 1.5,
+      "min": 0,
+      "max": 5,
+      "step": 0.05,
+      "binding": {
+        "property": "spread"
+      },
+      "apply": "finish"
+    },
+    {
+      "key": "thickness",
+      "type": "number",
+      "label": "纸厚 / Paper thickness",
+      "default": 0.012,
+      "min": 0.003,
+      "max": 0.04,
+      "step": 0.001,
+      "binding": {
+        "property": "thickness"
+      },
+      "apply": "finish"
+    },
+    {
+      "key": "seed",
+      "type": "number",
+      "label": "随机种子 / Seed",
+      "default": 1,
+      "min": 1,
+      "max": 100,
+      "step": 1,
+      "binding": {
+        "property": "seed"
+      },
+      "apply": "finish"
+    },
+    {
+      "key": "curve-color",
+      "type": "color",
+      "label": "曲线颜色 / Curve colour",
+      "default": "#0b0b0d",
+      "binding": {
+        "property": "curveColor"
+      }
+    }
+  ]
+}

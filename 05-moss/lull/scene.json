@@ -1,0 +1,108 @@
+{
+  "schemaVersion": 1,
+  "enabled": true,
+  "id": "codevember.moss",
+  "slug": "moss",
+  "name": "Moss",
+  "version": "1.0.0",
+  "description": "Moss grows over a stone in hops, then recedes.",
+  "author": "Yuri Artiukh",
+  "license": "CC-BY-4.0",
+  "source": {
+    "html": "index.html",
+    "module": "src/triangle/index.ts"
+  },
+  "entry": "lull/entry.ts",
+  "theme": {
+    "background": "#0c0f0a"
+  },
+  "capabilities": [
+    "wallpaper.viewport",
+    "wallpaper.params",
+    "wallpaper.script"
+  ],
+  "performance": {
+    "tier": "medium",
+    "targetFps": 60
+  },
+  "compatibility": {
+    "hostApi": 1,
+    "platforms": [
+      "windows"
+    ]
+  },
+  "requires": [
+    "webgpu"
+  ],
+  "assets": [],
+  "hide": [
+    ".lil-gui",
+    "#stats",
+    ".pages",
+    ".balls",
+    ".hud"
+  ],
+  "assetsLicense": "ok",
+  "params": [
+    {
+      "key": "height",
+      "type": "number",
+      "label": "高度 / Height",
+      "default": 1,
+      "min": 0.3,
+      "max": 2.5,
+      "step": 0.01,
+      "binding": {
+        "property": "height"
+      }
+    },
+    {
+      "key": "density",
+      "type": "number",
+      "label": "密度 / Density",
+      "default": 0.5,
+      "min": 0.1,
+      "max": 1,
+      "step": 0.01,
+      "binding": {
+        "property": "density"
+      }
+    },
+    {
+      "key": "growth",
+      "type": "number",
+      "label": "生长速度 / Growth",
+      "default": 0.3,
+      "min": 0.3,
+      "max": 3,
+      "step": 0.01,
+      "binding": {
+        "property": "growth"
+      }
+    },
+    {
+      "key": "life",
+      "type": "number",
+      "label": "寿命 / Life",
+      "default": 7.224,
+      "min": 3,
+      "max": 8.6,
+      "step": 0.01,
+      "binding": {
+        "property": "life"
+      }
+    },
+    {
+      "key": "glow",
+      "type": "number",
+      "label": "透光 / Glow",
+      "default": 1,
+      "min": 0,
+      "max": 3,
+      "step": 0.01,
+      "binding": {
+        "property": "glow"
+      }
+    }
+  ]
+}

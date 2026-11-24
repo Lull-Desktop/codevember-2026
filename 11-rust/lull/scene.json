@@ -1,0 +1,106 @@
+{
+  "schemaVersion": 1,
+  "enabled": true,
+  "id": "codevember.rust",
+  "slug": "rust",
+  "name": "Rust",
+  "version": "1.0.0",
+  "description": "A metal surface ages, cracks, and sheds flakes into the air.",
+  "author": "Yuri Artiukh",
+  "license": "CC-BY-4.0",
+  "source": {
+    "html": "index.html",
+    "module": "src/index.ts"
+  },
+  "entry": "lull/entry.ts",
+  "theme": {
+    "background": "#1a1715"
+  },
+  "capabilities": [
+    "wallpaper.viewport",
+    "wallpaper.params",
+    "wallpaper.script"
+  ],
+  "performance": {
+    "tier": "high",
+    "targetFps": 60
+  },
+  "compatibility": {
+    "hostApi": 1,
+    "platforms": [
+      "windows"
+    ]
+  },
+  "requires": [
+    "webgpu"
+  ],
+  "assets": [
+    "public/suzanne.mesh.bin",
+    "public/suzanne.sdf.bin"
+  ],
+  "hide": [
+    ".lil-gui",
+    "#stats",
+    ".pages",
+    ".balls",
+    ".hud"
+  ],
+  "assetsLicense": "review",
+  "params": [
+    {
+      "key": "span",
+      "type": "number",
+      "label": "老化跨度 / Age span",
+      "default": 2.5,
+      "min": 0.8,
+      "max": 3,
+      "step": 0.01,
+      "binding": {
+        "property": "span"
+      },
+      "apply": "finish"
+    },
+    {
+      "key": "gravity",
+      "type": "number",
+      "label": "重力 / Gravity",
+      "default": 0.5,
+      "min": 0.05,
+      "max": 2,
+      "step": 0.01,
+      "binding": {
+        "property": "gravity"
+      }
+    },
+    {
+      "key": "key",
+      "type": "number",
+      "label": "主光 / Key light",
+      "default": 4.2,
+      "min": 0,
+      "max": 10,
+      "step": 0.05,
+      "binding": {
+        "property": "key"
+      }
+    },
+    {
+      "key": "rust",
+      "type": "color",
+      "label": "锈色 / Rust",
+      "default": "#6e2e10",
+      "binding": {
+        "property": "rust"
+      }
+    },
+    {
+      "key": "background",
+      "type": "color",
+      "label": "背景 / Background",
+      "default": "#1a1715",
+      "binding": {
+        "property": "background"
+      }
+    }
+  ]
+}

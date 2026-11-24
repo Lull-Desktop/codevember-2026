@@ -1,0 +1,109 @@
+{
+  "schemaVersion": 1,
+  "enabled": true,
+  "id": "codevember.orrery",
+  "slug": "orrery",
+  "name": "Orrery",
+  "version": "1.0.0",
+  "description": "A zooming orrery of spirals and birds in a dim gallery.",
+  "author": "Yuri Artiukh",
+  "license": "CC-BY-4.0",
+  "source": {
+    "html": "index.html",
+    "module": "src/index.ts"
+  },
+  "entry": "lull/entry.ts",
+  "theme": {
+    "background": "#0b0c12"
+  },
+  "capabilities": [
+    "wallpaper.viewport",
+    "wallpaper.params",
+    "wallpaper.script"
+  ],
+  "performance": {
+    "tier": "high",
+    "targetFps": 60
+  },
+  "compatibility": {
+    "hostApi": 1,
+    "platforms": [
+      "windows"
+    ]
+  },
+  "requires": [
+    "webgpu"
+  ],
+  "assets": [],
+  "hide": [
+    ".lil-gui",
+    "#stats",
+    ".pages",
+    ".balls",
+    ".hud"
+  ],
+  "assetsLicense": "ok",
+  "params": [
+    {
+      "key": "density",
+      "type": "number",
+      "label": "螺旋密度 / Spiral density",
+      "default": 1.49,
+      "min": 0.6,
+      "max": 2.4,
+      "step": 0.01,
+      "binding": {
+        "property": "density"
+      },
+      "apply": "finish"
+    },
+    {
+      "key": "levels",
+      "type": "number",
+      "label": "每圈层数 / Dive",
+      "default": 4,
+      "min": 1,
+      "max": 24,
+      "step": 1,
+      "binding": {
+        "property": "levels"
+      }
+    },
+    {
+      "key": "pace",
+      "type": "number",
+      "label": "物体速度 / Object speed",
+      "default": 1,
+      "min": 1,
+      "max": 12,
+      "step": 1,
+      "binding": {
+        "property": "pace"
+      }
+    },
+    {
+      "key": "shafts",
+      "type": "number",
+      "label": "光柱 / Light shafts",
+      "default": 1.5,
+      "min": 0,
+      "max": 3,
+      "step": 0.01,
+      "binding": {
+        "property": "shafts"
+      }
+    },
+    {
+      "key": "sun",
+      "type": "number",
+      "label": "太阳光 / Sun light",
+      "default": 3,
+      "min": 0,
+      "max": 8,
+      "step": 0.05,
+      "binding": {
+        "property": "sun"
+      }
+    }
+  ]
+}

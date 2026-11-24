@@ -3,6 +3,12 @@
   "private": true,
   "scripts": {
     "build": "node scripts/build.mjs",
-    "preview": "npx -y http-server dist -c-1"
+    "preview": "npx -y http-server dist -c-1",
+    "lull:init": "node scripts/lull/init.mjs",
+    "lull:sync-sdk": "node scripts/lull/sync-sdk.mjs",
+    "lull:check": "node scripts/lull/check.mjs",
+    "lull:test": "node --test scripts/lull/test/digest.test.mjs scripts/lull/test/config.test.mjs scripts/lull/test/package.test.mjs",
+    "lull:build": "node scripts/lull/build.mjs",
+    "lull:preview": "node scripts/lull/preview.mjs"
   }
 }

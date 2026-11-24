@@ -1,0 +1,153 @@
+{
+  "schemaVersion": 1,
+  "enabled": true,
+  "id": "codevember.melt",
+  "slug": "melt",
+  "name": "Melt",
+  "version": "1.0.0",
+  "description": "A face in a metallic skin softens, drips, and reforms.",
+  "author": "Yuri Artiukh",
+  "license": "CC-BY-4.0",
+  "source": {
+    "html": "index.html",
+    "module": "src/index.js"
+  },
+  "entry": "lull/entry.ts",
+  "theme": {
+    "background": "#eeedea"
+  },
+  "capabilities": [
+    "wallpaper.viewport",
+    "wallpaper.params",
+    "wallpaper.script"
+  ],
+  "performance": {
+    "tier": "medium",
+    "targetFps": 60
+  },
+  "compatibility": {
+    "hostApi": 1,
+    "platforms": [
+      "windows"
+    ]
+  },
+  "requires": [
+    "webgpu"
+  ],
+  "assets": [
+    "public/sdf/*.field",
+    "public/sdf/*.json",
+    "public/matcaps/*.png",
+    "public/matcaps/*.jpg"
+  ],
+  "hide": [
+    ".lil-gui",
+    "#stats",
+    ".pages",
+    ".balls",
+    ".hud",
+    "body > div[style*=\"bottom:calc(44px\"]"
+  ],
+  "assetsLicense": "review",
+  "params": [
+    {
+      "key": "matcap",
+      "type": "enum",
+      "label": "金属 / Metal",
+      "default": "silver",
+      "binding": {
+        "property": "matcap"
+      },
+      "options": [
+        {
+          "value": "studio",
+          "label": "studio"
+        },
+        {
+          "value": "silver",
+          "label": "silver"
+        },
+        {
+          "value": "bronze",
+          "label": "bronze"
+        },
+        {
+          "value": "jade",
+          "label": "jade"
+        },
+        {
+          "value": "jadeshell",
+          "label": "jadeshell"
+        },
+        {
+          "value": "amber",
+          "label": "amber"
+        },
+        {
+          "value": "bone",
+          "label": "bone"
+        },
+        {
+          "value": "glass",
+          "label": "glass"
+        },
+        {
+          "value": "gradient",
+          "label": "gradient"
+        },
+        {
+          "value": "ball",
+          "label": "ball"
+        }
+      ]
+    },
+    {
+      "key": "lower",
+      "type": "number",
+      "label": "下落 / Lower face",
+      "default": 0.3,
+      "min": -0.2,
+      "max": 0.8,
+      "step": 0.01,
+      "binding": {
+        "property": "lower"
+      }
+    },
+    {
+      "key": "tilt",
+      "type": "number",
+      "label": "抬头 / Look up",
+      "default": 0,
+      "min": -15,
+      "max": 45,
+      "step": 1,
+      "binding": {
+        "property": "tilt"
+      }
+    },
+    {
+      "key": "exposure",
+      "type": "number",
+      "label": "曝光 / Exposure",
+      "default": 1.15,
+      "min": 0.3,
+      "max": 3,
+      "step": 0.01,
+      "binding": {
+        "property": "exposure"
+      }
+    },
+    {
+      "key": "ragged",
+      "type": "number",
+      "label": "边缘 / Ragged edge",
+      "default": 0,
+      "min": 0,
+      "max": 2,
+      "step": 0.01,
+      "binding": {
+        "property": "ragged"
+      }
+    }
+  ]
+}

@@ -1,0 +1,47 @@
+{
+  "schemaVersion": 1,
+  "enabled": true,
+  "id": "codevember.membrane",
+  "slug": "membrane",
+  "name": "Membrane",
+  "version": "1.0.0",
+  "description": "Cells fuse and drift in a dark, luminous membrane.",
+  "author": "Yuri Artiukh",
+  "license": "CC-BY-4.0",
+  "source": {
+    "html": "index.html",
+    "module": "src/volvox/index.ts"
+  },
+  "entry": "lull/entry.ts",
+  "theme": {
+    "background": "#000000"
+  },
+  "capabilities": [
+    "wallpaper.viewport",
+    "wallpaper.params",
+    "wallpaper.script"
+  ],
+  "performance": {
+    "tier": "high",
+    "targetFps": 60
+  },
+  "compatibility": {
+    "hostApi": 1,
+    "platforms": [
+      "windows"
+    ]
+  },
+  "requires": [
+    "webgpu"
+  ],
+  "assets": [],
+  "hide": [
+    ".lil-gui",
+    "#stats",
+    ".pages",
+    ".balls",
+    ".hud"
+  ],
+  "assetsLicense": "ok",
+  "params": []
+}

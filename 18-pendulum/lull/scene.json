@@ -1,0 +1,119 @@
+{
+  "schemaVersion": 1,
+  "enabled": true,
+  "id": "codevember.pendulum",
+  "slug": "pendulum",
+  "name": "Pendulum",
+  "version": "1.0.0",
+  "description": "A ball swings through framed cloth mirrors in a slow loop.",
+  "author": "Yuri Artiukh",
+  "license": "CC-BY-4.0",
+  "source": {
+    "html": "index.html",
+    "module": "src/veil.ts"
+  },
+  "entry": "lull/entry.ts",
+  "theme": {
+    "background": "#bdc8d4"
+  },
+  "capabilities": [
+    "wallpaper.viewport",
+    "wallpaper.params",
+    "wallpaper.script"
+  ],
+  "performance": {
+    "tier": "high",
+    "targetFps": 60
+  },
+  "compatibility": {
+    "hostApi": 1,
+    "platforms": [
+      "windows"
+    ]
+  },
+  "requires": [
+    "webgpu"
+  ],
+  "assets": [],
+  "hide": [
+    ".lil-gui",
+    "#stats",
+    ".pages",
+    ".balls",
+    ".hud"
+  ],
+  "assetsLicense": "ok",
+  "params": [
+    {
+      "key": "exposure",
+      "type": "number",
+      "label": "曝光 / Exposure",
+      "default": 1,
+      "min": 0.2,
+      "max": 3,
+      "step": 0.01,
+      "binding": {
+        "property": "exposure"
+      }
+    },
+    {
+      "key": "key",
+      "type": "number",
+      "label": "主光 / Key light",
+      "default": 2.2,
+      "min": 0,
+      "max": 8,
+      "step": 0.01,
+      "binding": {
+        "property": "key"
+      }
+    },
+    {
+      "key": "bloom",
+      "type": "number",
+      "label": "泛光 / Bloom",
+      "default": 0.18,
+      "min": 0,
+      "max": 2,
+      "step": 0.01,
+      "binding": {
+        "property": "bloom"
+      }
+    },
+    {
+      "key": "tone",
+      "type": "enum",
+      "label": "色调映射 / Tone",
+      "default": "neutral",
+      "binding": {
+        "property": "tone"
+      },
+      "options": [
+        {
+          "value": "neutral",
+          "label": "neutral"
+        },
+        {
+          "value": "agx",
+          "label": "agx"
+        },
+        {
+          "value": "aces",
+          "label": "aces"
+        }
+      ]
+    },
+    {
+      "key": "grade",
+      "type": "number",
+      "label": "调色 / Grade",
+      "default": 1,
+      "min": 0,
+      "max": 1,
+      "step": 0.01,
+      "binding": {
+        "property": "grade"
+      }
+    }
+  ]
+}

@@ -67,7 +67,13 @@ const footer = (day, folder) => `
 `;
 
 const run =(command, args, cwd) => {
-  const { status } = spawnSync(command, args, { cwd, stdio: "inherit" });
+  // Windows resolves `npx`/`npm` through .cmd shims, which spawnSync does not
+  // find without a shell.
+  const { status } = spawnSync(command, args, {
+    cwd,
+    stdio: "inherit",
+    shell: process.platform === "win32",
+  });
   if (status !== 0) throw new Error(`${command} ${args[0]} failed in ${cwd}`);
 };
 

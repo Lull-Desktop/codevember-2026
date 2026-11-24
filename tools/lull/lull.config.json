@@ -1,0 +1,44 @@
+{
+  "schemaVersion": 1,
+  "sdk": "tools/lull/scene-sdk",
+  "outDir": "dist-lull",
+  "defaults": {
+    "author": "Yuri Artiukh",
+    "license": "CC-BY-4.0",
+    "capabilities": [
+      "wallpaper.viewport",
+      "wallpaper.params",
+      "wallpaper.script"
+    ],
+    "compatibility": {
+      "hostApi": 1,
+      "platforms": [
+        "windows"
+      ]
+    },
+    "performance": {
+      "tier": "medium",
+      "targetFps": 60
+    }
+  },
+  "scenes": [
+    "01-fold",
+    "02-shatter",
+    "03-melt",
+    "04-tangle",
+    "05-moss",
+    "06-orrery",
+    "07-hollow",
+    "08-tesseract",
+    "09-membrane",
+    "10-caustic",
+    "11-rust",
+    "12-feather",
+    "13-labyrinth",
+    "14-tension",
+    "15-mirage",
+    "16-spore",
+    "17-kelp",
+    "18-pendulum"
+  ]
+}

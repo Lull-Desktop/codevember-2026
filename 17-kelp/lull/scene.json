@@ -1,0 +1,113 @@
+{
+  "schemaVersion": 1,
+  "enabled": true,
+  "id": "codevember.kelp",
+  "slug": "kelp",
+  "name": "Kelp",
+  "version": "1.0.0",
+  "description": "Kelp grows up a sunlit diagonal while fish dart through it.",
+  "author": "Yuri Artiukh",
+  "license": "CC-BY-4.0",
+  "source": {
+    "html": "index.html",
+    "module": "src/tangle.ts"
+  },
+  "entry": "lull/entry.ts",
+  "theme": {
+    "background": "#03121f"
+  },
+  "capabilities": [
+    "wallpaper.viewport",
+    "wallpaper.params",
+    "wallpaper.script"
+  ],
+  "performance": {
+    "tier": "high",
+    "targetFps": 60
+  },
+  "compatibility": {
+    "hostApi": 1,
+    "platforms": [
+      "windows"
+    ]
+  },
+  "requires": [
+    "webgpu"
+  ],
+  "assets": [
+    "public/suzanne.json",
+    "public/clownfish.glb",
+    "public/butterflyfish.glb",
+    "public/butterflyfish.png"
+  ],
+  "hide": [
+    ".lil-gui",
+    "#stats",
+    ".pages",
+    ".balls",
+    ".hud"
+  ],
+  "assetsLicense": "review",
+  "params": [
+    {
+      "key": "stipes",
+      "type": "number",
+      "label": "海带茎 / Shoots",
+      "default": 300,
+      "min": 1,
+      "max": 600,
+      "step": 1,
+      "binding": {
+        "property": "stipes"
+      }
+    },
+    {
+      "key": "leaves",
+      "type": "number",
+      "label": "叶片 / Fronds",
+      "default": 125,
+      "min": 0,
+      "max": 300,
+      "step": 1,
+      "binding": {
+        "property": "leaves"
+      }
+    },
+    {
+      "key": "surge",
+      "type": "number",
+      "label": "涌动 / Surge",
+      "default": 1,
+      "min": 0,
+      "max": 1.1,
+      "step": 0.01,
+      "binding": {
+        "property": "surge"
+      }
+    },
+    {
+      "key": "fish",
+      "type": "number",
+      "label": "鱼群 / Fish",
+      "default": 40,
+      "min": 0,
+      "max": 120,
+      "step": 1,
+      "binding": {
+        "property": "fish"
+      }
+    },
+    {
+      "key": "sun",
+      "type": "number",
+      "label": "阳光 / Sun",
+      "default": 2.1,
+      "min": 0,
+      "max": 10,
+      "step": 0.05,
+      "binding": {
+        "property": "sun"
+      }
+    }
+  ]
+}

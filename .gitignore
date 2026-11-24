@@ -9,6 +9,11 @@ output
 process
 timelapse
 
+# Lull scene build outputs
+dist-lull/
+**/.lull-build/
+**/lull-preview.html
+
 # Blender renders and backups: source scenes and scripts stay tracked
 **/blender/renders/
 **/blender/frames/

@@ -1,0 +1,72 @@
+{
+  "schemaVersion": 1,
+  "enabled": true,
+  "id": "codevember.tension",
+  "slug": "tension",
+  "name": "Tension",
+  "version": "1.0.0",
+  "description": "A rose-gold cloth is pulled and released in a slow waltz.",
+  "author": "Yuri Artiukh",
+  "license": "CC-BY-4.0",
+  "source": {
+    "html": "index.html",
+    "module": "src/cloth/main.ts"
+  },
+  "entry": "lull/entry.ts",
+  "theme": {
+    "background": "#0d0e10"
+  },
+  "capabilities": [
+    "wallpaper.viewport",
+    "wallpaper.params",
+    "wallpaper.script"
+  ],
+  "performance": {
+    "tier": "high",
+    "targetFps": 60
+  },
+  "compatibility": {
+    "hostApi": 1,
+    "platforms": [
+      "windows"
+    ]
+  },
+  "requires": [
+    "webgpu"
+  ],
+  "assets": [
+    "public/face.json",
+    "public/face.sdf",
+    "public/waltz.flac",
+    "public/waltz-edits.json"
+  ],
+  "hide": [
+    ".lil-gui",
+    "#stats",
+    ".pages",
+    ".balls",
+    ".hud"
+  ],
+  "assetsLicense": "review",
+  "params": [
+    {
+      "key": "look",
+      "type": "enum",
+      "label": "外观 / Look",
+      "default": "c",
+      "binding": {
+        "property": "look"
+      },
+      "options": [
+        {
+          "value": "c",
+          "label": "graded"
+        },
+        {
+          "value": "d",
+          "label": "iridescent"
+        }
+      ]
+    }
+  ]
+}

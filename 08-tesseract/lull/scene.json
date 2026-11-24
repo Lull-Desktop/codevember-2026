@@ -1,0 +1,98 @@
+{
+  "schemaVersion": 1,
+  "enabled": true,
+  "id": "codevember.tesseract",
+  "slug": "tesseract",
+  "name": "Tesseract",
+  "version": "1.0.0",
+  "description": "A glass tesseract rolls through a four-dimensional studio.",
+  "author": "Yuri Artiukh",
+  "license": "CC-BY-4.0",
+  "source": {
+    "html": "index.html",
+    "module": "src/roll/index.ts"
+  },
+  "entry": "lull/entry.ts",
+  "theme": {
+    "background": "#111111"
+  },
+  "capabilities": [
+    "wallpaper.viewport",
+    "wallpaper.params",
+    "wallpaper.script"
+  ],
+  "performance": {
+    "tier": "high",
+    "targetFps": 60
+  },
+  "compatibility": {
+    "hostApi": 1,
+    "platforms": [
+      "windows"
+    ]
+  },
+  "requires": [
+    "webgpu"
+  ],
+  "assets": [],
+  "hide": [
+    ".lil-gui",
+    "#stats",
+    ".pages",
+    ".balls",
+    ".hud"
+  ],
+  "assetsLicense": "ok",
+  "params": [
+    {
+      "key": "seconds",
+      "type": "number",
+      "label": "每次翻滚 / Seconds a roll",
+      "default": 1.25,
+      "min": 0.4,
+      "max": 4,
+      "step": 0.05,
+      "binding": {
+        "property": "seconds"
+      }
+    },
+    {
+      "key": "distance",
+      "type": "number",
+      "label": "四维眼距 / 4D eye distance",
+      "default": 3,
+      "min": 1.6,
+      "max": 12,
+      "step": 0.05,
+      "binding": {
+        "property": "distance"
+      },
+      "apply": "finish"
+    },
+    {
+      "key": "bounces",
+      "type": "number",
+      "label": "反射次数 / Bounces",
+      "default": 4,
+      "min": 0,
+      "max": 4,
+      "step": 1,
+      "binding": {
+        "property": "bounces"
+      },
+      "apply": "finish"
+    },
+    {
+      "key": "exposure",
+      "type": "number",
+      "label": "曝光 / Exposure",
+      "default": 1,
+      "min": 0.2,
+      "max": 3,
+      "step": 0.01,
+      "binding": {
+        "property": "exposure"
+      }
+    }
+  ]
+}

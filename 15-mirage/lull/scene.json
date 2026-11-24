@@ -1,0 +1,142 @@
+{
+  "schemaVersion": 1,
+  "enabled": true,
+  "id": "codevember.mirage",
+  "slug": "mirage",
+  "name": "Mirage",
+  "version": "1.0.0",
+  "description": "A desert mirage of mirrors, cloud, and a low sun.",
+  "author": "Yuri Artiukh",
+  "license": "CC-BY-4.0",
+  "source": {
+    "html": "index.html",
+    "module": "src/index.ts"
+  },
+  "entry": "lull/entry.ts",
+  "theme": {
+    "background": "#2b2233"
+  },
+  "capabilities": [
+    "wallpaper.viewport",
+    "wallpaper.params",
+    "wallpaper.script"
+  ],
+  "performance": {
+    "tier": "high",
+    "targetFps": 60
+  },
+  "compatibility": {
+    "hostApi": 1,
+    "platforms": [
+      "windows"
+    ]
+  },
+  "requires": [
+    "webgpu"
+  ],
+  "assets": [],
+  "hide": [
+    ".lil-gui",
+    "#stats",
+    ".pages",
+    ".balls",
+    ".hud"
+  ],
+  "assetsLicense": "ok",
+  "params": [
+    {
+      "key": "sun-turn",
+      "type": "number",
+      "label": "太阳角度 / Sun turn",
+      "default": -6,
+      "min": -180,
+      "max": 180,
+      "step": 1,
+      "binding": {
+        "property": "sunTurn"
+      }
+    },
+    {
+      "key": "sun-power",
+      "type": "number",
+      "label": "太阳强度 / Sun power",
+      "default": 22,
+      "min": 1,
+      "max": 60,
+      "step": 0.5,
+      "binding": {
+        "property": "sunPower"
+      }
+    },
+    {
+      "key": "exposure",
+      "type": "number",
+      "label": "曝光 / Exposure",
+      "default": 1.15,
+      "min": 0.1,
+      "max": 5,
+      "step": 0.01,
+      "binding": {
+        "property": "exposure"
+      }
+    },
+    {
+      "key": "view",
+      "type": "enum",
+      "label": "视角 / View",
+      "default": "fly",
+      "binding": {
+        "property": "view"
+      },
+      "options": [
+        {
+          "value": "fly",
+          "label": "fly"
+        },
+        {
+          "value": "map",
+          "label": "map"
+        },
+        {
+          "value": "sky",
+          "label": "sky"
+        }
+      ]
+    },
+    {
+      "key": "fps-cap",
+      "type": "enum",
+      "label": "帧率上限 / FPS cap",
+      "default": "60",
+      "binding": {
+        "property": "fpsCap"
+      },
+      "map": {
+        "value": {
+          "0": 0,
+          "30": 30,
+          "60": 60,
+          "120": 120
+        }
+      },
+      "options": [
+        {
+          "value": "0",
+          "label": "unlimited"
+        },
+        {
+          "value": "30",
+          "label": "30"
+        },
+        {
+          "value": "60",
+          "label": "60"
+        },
+        {
+          "value": "120",
+          "label": "120"
+        }
+      ]
+    }
+  ]
+}

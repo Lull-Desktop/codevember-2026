@@ -1,0 +1,115 @@
+{
+  "schemaVersion": 1,
+  "package": "@lull/scene-sdk",
+  "version": "0.4.0",
+  "source": "F:/TK/GameProjects/lull-app/packages/scene-sdk",
+  "usedBy": "https://github.com/akella/codevember-2026",
+  "syncedAt": "2026-11-24T03:45:33.061Z",
+  "files": [
+    {
+      "name": "LICENSE",
+      "bytes": 2280,
+      "sha256": "de319e961dd2344e5667b30a8378280210494b17e210eb519ce3382c277160ea"
+    },
+    {
+      "name": "README.md",
+      "bytes": 13670,
+      "sha256": "e17a25fe77f08f2e02f127412edef4de0471535c62e407b3b271704b1b0b0f84"
+    },
+    {
+      "name": "dist/audio-types.d.ts",
+      "bytes": 4007,
+      "sha256": "8ce6bbb3cf71d5d31a746261af2931771a94c4eefc6649369d6ead11cc5f2245"
+    },
+    {
+      "name": "dist/audio-types.js",
+      "bytes": 5721,
+      "sha256": "f184cc2347b9db652230f4343ee0958eaf9a10ab7a7e4f01ab91d56772a4815d"
+    },
+    {
+      "name": "dist/audio.d.ts",
+      "bytes": 2467,
+      "sha256": "14bda8343df611e7be1257b853b726ecc1647588093077946404e63303f5adff"
+    },
+    {
+      "name": "dist/audio.js",
+      "bytes": 8323,
+      "sha256": "cc9d5dc2dd220718155d953729c138b37c20dc39e1c74862589b66f7eba59201"
+    },
+    {
+      "name": "dist/client.d.ts",
+      "bytes": 2778,
+      "sha256": "a503069bfad604dcd109090d72b173acc2963685f3f48a98ab9fb245a6c4635e"
+    },
+    {
+      "name": "dist/client.js",
+      "bytes": 8363,
+      "sha256": "5048b606442fec543604e454db530c367c15bd5a63b77f415c65b266a05b2a2b"
+    },
+    {
+      "name": "dist/errors.d.ts",
+      "bytes": 355,
+      "sha256": "3c4cfc5dfb9ebbbd5a14119e891ffc5bb3ad5b4b458f6f99f4eebc0cc0521fca"
+    },
+    {
+      "name": "dist/errors.js",
+      "bytes": 217,
+      "sha256": "0cec16669bef4db3d3f7d844886687061c3cef67f6e581e41befe0ad471b4764"
+    },
+    {
+      "name": "dist/index.d.ts",
+      "bytes": 1573,
+      "sha256": "bcafbc67344cb9ea98088660e4058901bd8dbdfcf7f44f44c27266da37b7c5dd"
+    },
+    {
+      "name": "dist/index.js",
+      "bytes": 748,
+      "sha256": "dfb5b8110735a399cb1fcd9585ef2356697a31be6f7d5b78dfee748aa0b2c6a4"
+    },
+    {
+      "name": "dist/protocol.d.ts",
+      "bytes": 5017,
+      "sha256": "aac63fbf219e99c4b158d17bc0bed6530fe931c6113ef1405099535b6433036e"
+    },
+    {
+      "name": "dist/protocol.js",
+      "bytes": 4147,
+      "sha256": "d77b3b99bfe57b0ecd714f8bf5bb43ee59fcd40d36eae81897fcab3e9e9aed66"
+    },
+    {
+      "name": "dist/sync.d.ts",
+      "bytes": 366,
+      "sha256": "26aedc6a763b121241f6846528a9892d78348f1b5012c8bb682aada5d9ce97fc"
+    },
+    {
+      "name": "dist/sync.js",
+      "bytes": 496,
+      "sha256": "0179f71c22e803777dc1f8629e1d9de422675ee8643166eeb7ea630cc757bdeb"
+    },
+    {
+      "name": "dist/testing.d.ts",
+      "bytes": 1925,
+      "sha256": "4c89cdf29aec9c7172df0e6c7e1587fc0dfdad0cf9314d465214535390c818a5"
+    },
+    {
+      "name": "dist/testing.js",
+      "bytes": 3339,
+      "sha256": "e78a60ac8a32576adfb5c0567c238e233530cbea496ea2d50037091b2ee64d5f"
+    },
+    {
+      "name": "dist/transport.d.ts",
+      "bytes": 549,
+      "sha256": "515a8b808e1f1f20f74607216d4a7cd99cfd4950b3f77677b217c45cda7d4920"
+    },
+    {
+      "name": "dist/transport.js",
+      "bytes": 763,
+      "sha256": "c2627eb5337a5f3195a471b5b5e0017ad077d0b75a088de7c139c75600d06480"
+    },
+    {
+      "name": "package.json",
+      "bytes": 1073,
+      "sha256": "e074cccd9462c0e0c9679e0f2a952ea197af352c28ffacfb2208fbdf1758fdaa"
+    }
+  ]
+}
