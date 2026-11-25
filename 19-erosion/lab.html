@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>erosion · models</title>
+    <style>
+      html,
+      body {
+        margin: 0;
+        background: #171513;
+        color: #cfc6ba;
+        font:
+          13px/1.45 system-ui,
+          sans-serif;
+      }
+      #grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
+        gap: 18px;
+        padding: 18px;
+      }
+      #grid.one {
+        grid-template-columns: minmax(0, 900px);
+        justify-content: center;
+      }
+      .tile canvas {
+        display: block;
+        width: 100%;
+        aspect-ratio: 1;
+        background: #000;
+        border-radius: 3px;
+        cursor: pointer;
+      }
+      .tile h2 {
+        margin: 8px 0 0;
+        font-size: 14px;
+        font-weight: 600;
+        color: #efe7da;
+      }
+      .tile h2 a {
+        color: inherit;
+        text-decoration: none;
+      }
+      .tile .paper {
+        color: #9c8f7f;
+      }
+      .tile p {
+        margin: 2px 0 0;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="grid"></div>
+    <script type="module" src="./src/lab/main.ts"></script>
+  </body>
+</html>
