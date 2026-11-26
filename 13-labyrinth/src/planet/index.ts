@@ -228,6 +228,7 @@ const sketch: Sketch<"webgpu"> = async ({ wrap, canvas }) => {
   }
   gui.add({ another: () => ((look.seed = 1 + Math.floor(Math.random() * 998)), gui.controllersRecursive().forEach((c) => c.updateDisplay()), rebuild()) }, "another");
   const stats = new Stats();
+  stats.dom.className = "labyrinth-stats";
   stats.dom.style.cssText = "position:fixed;top:0;left:0";
   canvas.after(stats.dom);
 

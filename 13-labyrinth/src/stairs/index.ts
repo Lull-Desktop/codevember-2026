@@ -341,6 +341,7 @@ const sketch: Sketch<"webgpu"> = async ({ wrap, canvas }) => {
   };
   window.addEventListener("keydown", key);
   const hint = document.createElement("div");
+  hint.className = "labyrinth-hint";
   hint.textContent = "click someone to go with them · T turns the world";
   hint.style.cssText = "position:fixed;left:0;right:0;bottom:max(18px, env(safe-area-inset-bottom, 0px));text-align:center;font:12px/1.4 system-ui,sans-serif;letter-spacing:0.04em;color:rgba(70,35,45,0.6);pointer-events:none;transition:opacity 1.2s";
   canvas.after(hint);
@@ -362,6 +363,7 @@ const sketch: Sketch<"webgpu"> = async ({ wrap, canvas }) => {
   gui.add({ dusk: () => light(DUSK) }, "dusk");
   gui.add({ day: () => light(DAY) }, "day");
   const stats = new Stats();
+  stats.dom.className = "labyrinth-stats";
   stats.dom.style.cssText = "position:fixed;top:0;left:0";
   canvas.after(stats.dom);
 

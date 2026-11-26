@@ -620,6 +620,7 @@ const backdropTarget = new THREE.Vector3()
 let darkTarget = 0
 // the arrows are for anyone who comes across the piece, so they are plain page controls and not part of the panel
 const picker = document.createElement('div')
+picker.className = 'melt-picker'
 const applyAll = () => {
   matcap.node.value = matcaps[settings.matcap]
   for (const key of ['exposure', 'contrast', 'gamma', 'saturation', 'hollows', 'shadow', 'jadeDepth', 'jadeGlow', 'jadeVeins']) look[key].value = settings[key]

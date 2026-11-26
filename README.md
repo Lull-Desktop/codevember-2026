@@ -41,13 +41,18 @@ npm run lull:build -- --all --pack
 # local browser preview; ?key=value overrides params
 npm run lull:preview -- 01-fold
 
+# regenerate the 16:9 catalog screenshots and refresh the zips
+npm run lull:previews -- --all --pack
+
 # install into lull-app/extensions/bundled and rebuild there
 npm run lull:build -- --all --target bundled --into F:/TK/GameProjects/lull-app
 ```
 
 Outputs go to `dist-lull/<scene-id>/` plus `dist-lull/artifacts/*.zip` and
-`dist-lull/report.json`. Lull requires one scene per package; the package is
-`catalog.json` + `scenes/<slug>/index.html` + `scene.js` + declared assets.
+`dist-lull/report.json`. Each package also carries a 1600×900 `preview.webp`
+(copied from `NN-name/preview.webp`); Lull requires one scene per package, and
+the package is `catalog.json` + `scenes/<slug>/index.html` + `scene.js` +
+declared assets.
 
 To add a new project:
 

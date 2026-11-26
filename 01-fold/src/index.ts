@@ -44,6 +44,7 @@ import {
   PMREMGenerator,
   PostProcessing,
   Scene,
+  Spherical,
   VSMShadowMap,
   PCFShadowMap,
   PCFSoftShadowMap,
@@ -59,11 +60,20 @@ import { createPCSSFilter, createSoftShadowFilter } from "./softShadow";
 
 /** output formats: canvas size, default spread, and a camera preset (VIEWS) */
 const FORMATS = {
-  square: { dimensions: [1024, 1024] as [number, number], spread: 1.5 }, // twitter
+  // normal mode fills the window (ssam reads the size from the page)
+  square: { spread: 1.5 },
   insta: { dimensions: [1080, 1920] as [number, number], spread: 2.35 },
 };
 type FormatName = keyof typeof FORMATS;
 const FORMAT_KEY = "fold-format";
+
+// Camera framing is built from this base distance. The user-facing
+// `camDistance` is a live multiplier around it: smaller = push in, larger =
+// pull back. Keeping the base fixed means changing the dolly never rebuilds
+// the scene (see the per-frame camera code).
+const CAMERA_DISTANCE_BASE = 1.5;
+const CAMERA_DISTANCE_MIN = 1;
+const CAMERA_DISTANCE_MAX = 2.5;
 
 /** ?insta=true|false wins, then the last choice made in the GUI */
 function loadInsta() {
@@ -79,8 +89,9 @@ function loadInsta() {
 // ---------------------------------------------------------------------------
 // live-editable through the GUI (top right)
 const CONFIG = {
-  /** off: square · on: 1080×1920 for instagram. Sets size + camera, and reloads
-   *  the page: ssam only reads the export size at startup */
+  /** off: fill the window (wallpaper) · on: 1080×1920 for instagram.
+   *  Sets size + camera, and reloads the page: ssam only reads the export size
+   *  at startup */
   insta: loadInsta(),
   /** each nested cube is this fraction of the previous one */
   scale: 0.5,
@@ -97,10 +108,14 @@ const CONFIG = {
   spread: FORMATS[loadInsta() ? "insta" : "square"].spread,
   /** random seed for the head starts */
   seed: 1,
-  /** camera distance multiplier (smaller = closer) */
-  camDistance: 1.5,
-  /** paper thickness relative to cube size */
-  thickness: 0.012,
+  /** camera distance multiplier (smaller = closer); live, exposed to Lull */
+  camDistance: CAMERA_DISTANCE_BASE,
+  /** extra camera rotation around the look target, in degrees. These are
+   *  applied on top of the preset/orbit view, so they also work while the
+   *  wallpaper plays and can be exposed as Lull params. */
+  cameraYaw: 0,
+  cameraPitch: 0,
+  cameraRoll: 0,
   /** paint a continuous curve on the inside of the cubes */
   curve: true,
   /** its width at the start of a cube, relative to that cube's size; it thins
@@ -143,6 +158,8 @@ const CONFIG = {
 const ROLL_SECONDS = 1.0;
 const ROLLS = 6; // 1 "step off" roll + 5 face-dropping rolls (see cube.ts)
 const FUTURE_LEVELS = 2; // nested, not yet revealed cubes beyond the active one
+/** fixed paper thickness relative to cube size (no longer a user parameter) */
+const PAPER_THICKNESS = 0.012;
 // ---------------------------------------------------------------------------
 
 /** day: white-on-white studio · night: white paper on near-black, one
@@ -473,7 +490,7 @@ const sketch: Sketch<"webgpu"> = async ({
     W.chains = [];
 
     const r = CONFIG.scale;
-    const t = CONFIG.thickness;
+    const t = PAPER_THICKNESS;
 
     // a probe cube to measure the net (all cubes are identical in own units)
     const probe = createRollingCube(paperMat, t);
@@ -525,7 +542,8 @@ const sketch: Sketch<"webgpu"> = async ({
     const R = Math.hypot(C.x, C.z); // distance of the active cube from C
 
     // ---- camera ----
-    const D = CONFIG.camDistance;
+    // The base framing is fixed; CONFIG.camDistance is applied live below.
+    const D = CAMERA_DISTANCE_BASE;
     if (CONFIG.camera === "follow") {
       // look back along the travel direction: the cube rolls towards the
       // viewer, zigzagging L/R. Aim between the two zigzag lanes.
@@ -570,8 +588,9 @@ const sketch: Sketch<"webgpu"> = async ({
     W.viewDist = proxy.position.distanceTo(controls.target);
 
     // ---- how many levels? enough that the one dropping out at the loop wrap
-    // is already lost in the fog
-    const farthest = W.viewDist * 2.6 + R;
+    // is already lost in the fog, even at the maximum camera pull-back
+    const farthest =
+      W.viewDist * (CAMERA_DISTANCE_MAX / CAMERA_DISTANCE_BASE) * 2.6 + R;
     const past = Math.min(
       14,
       Math.max(
@@ -669,10 +688,20 @@ const sketch: Sketch<"webgpu"> = async ({
     build();
   });
   gui.add(CONFIG, "camera", ["follow", "center"]).onChange(build);
+  const cam = gui.addFolder("camera");
+  cam.add(
+    CONFIG,
+    "camDistance",
+    CAMERA_DISTANCE_MIN,
+    CAMERA_DISTANCE_MAX,
+    0.05,
+  );
+  // live orbit offsets: the render loop reads them every frame, so no rebuild
+  cam.add(CONFIG, "cameraYaw", -180, 180, 1);
+  cam.add(CONFIG, "cameraPitch", -60, 60, 1);
+  cam.add(CONFIG, "cameraRoll", -180, 180, 1);
   gui.add(CONFIG, "spread", 0, 5, 0.05).onFinishChange(build);
   gui.add(CONFIG, "seed", 1, 100, 1).onFinishChange(build);
-  gui.add(CONFIG, "camDistance", 0.5, 3, 0.05).onFinishChange(build);
-  gui.add(CONFIG, "thickness", 0.003, 0.04, 0.001).onFinishChange(build);
   gui.add(CONFIG, "curve");
   gui.add(CONFIG, "curveWidth", 0.02, 0.44, 0.01).onFinishChange(build);
   gui.addColor(CONFIG, "curveColor");
@@ -762,6 +791,10 @@ const sketch: Sketch<"webgpu"> = async ({
 
   const frame = new Matrix4();
   const tmp = new Vector3();
+  const orbitOffset = new Vector3();
+  const orbitPosition = new Vector3();
+  const orbitTarget = new Vector3();
+  const orbitSpherical = new Spherical();
   /** apply "zoom by s about C" to a level-0 point */
   const zoom = (out: Vector3, v: Vector3, s: number) =>
     out.copy(v).sub(W.C).multiplyScalar(s).add(W.C);
@@ -797,7 +830,7 @@ const sketch: Sketch<"webgpu"> = async ({
       C: W.C.toArray(),
       R: W.R,
       zoom: Math.pow(CONFIG.scale, CONFIG.playhead),
-      size: FORMATS[format()].dimensions,
+      size: [canvas.width / pixelRatio, canvas.height / pixelRatio],
       atlas: ATLAS,
       shapes,
       faces,
@@ -893,14 +926,48 @@ const sketch: Sketch<"webgpu"> = async ({
     const s = Math.pow(CONFIG.scale, p);
 
     controls.update();
-    zoom(camera.position, proxy.position, s);
-    camera.quaternion.copy(proxy.quaternion);
-    camera.near = 0.02 * W.viewDist * s;
-    camera.far = 4 * W.viewDist * s;
+
+    // Camera sliders: yaw/pitch orbit the camera around the current look
+    // target; roll banks it around the view axis. They are applied to the
+    // render camera only, so OrbitControls keeps its own state and the world
+    // zoom below still works. Defaults (0/0/0) reproduce the original view.
+    const yaw = (CONFIG.cameraYaw * Math.PI) / 180;
+    const pitch = (CONFIG.cameraPitch * Math.PI) / 180;
+    const roll = (CONFIG.cameraRoll * Math.PI) / 180;
+    if (yaw !== 0 || pitch !== 0) {
+      orbitOffset.copy(proxy.position).sub(controls.target);
+      orbitSpherical.setFromVector3(orbitOffset);
+      orbitSpherical.theta += yaw;
+      // keep the camera above the floor and away from the exact pole, where
+      // lookAt's up vector (and therefore yaw) becomes undefined
+      orbitSpherical.phi = Math.min(
+        Math.PI / 2 - 0.02,
+        Math.max(0.08, orbitSpherical.phi + pitch),
+      );
+      orbitPosition.setFromSpherical(orbitSpherical).add(controls.target);
+    } else {
+      orbitPosition.copy(proxy.position);
+    }
+
+    // Dolly: scale the camera's distance from the look target. This is live
+    // and does not rebuild the world; fog/clip distances follow the effective
+    // view distance so the composition stays consistent.
+    const dolly = Math.max(0.05, CONFIG.camDistance / CAMERA_DISTANCE_BASE);
+    orbitOffset.copy(orbitPosition).sub(controls.target).multiplyScalar(dolly);
+    orbitPosition.copy(controls.target).add(orbitOffset);
+
+    zoom(camera.position, orbitPosition, s);
+    zoom(orbitTarget, controls.target, s);
+    camera.lookAt(orbitTarget);
+    if (roll !== 0) camera.rotateZ(roll);
+
+    const viewDist = W.viewDist * dolly;
+    camera.near = 0.02 * viewDist * s;
+    camera.far = 4 * viewDist * s;
     camera.updateProjectionMatrix();
 
-    fog.near = 0.8 * W.viewDist * s;
-    fog.far = 2.4 * W.viewDist * s;
+    fog.near = 0.8 * viewDist * s;
+    fog.far = 2.4 * viewDist * s;
 
     const ext = W.shadowExtent;
     const sunDist = ext * 2 + 5;
@@ -940,12 +1007,17 @@ const sketch: Sketch<"webgpu"> = async ({
 
     if (CONFIG.dof) {
       // in-focus point: the near side of the ring of radius focusRing·R,
-      // measured along the view direction (in level-0 space, then zoomed)
-      const toCam = tmp.copy(proxy.position).sub(W.C).setY(0).normalize();
-      const P = toCam.multiplyScalar(CONFIG.focusRing * W.R).add(W.C);
-      const fwd = proxy.getWorldDirection(new Vector3());
-      const depth = P.sub(proxy.position).dot(fwd);
-      focusDistance.value = Math.max(0.01, depth) * s;
+      // measured along the (possibly yawed/pitched) view direction. Use the
+      // final camera rather than the OrbitControls proxy so the focus follows
+      // the exposed camera sliders. C is the fixed point of the zoom, so all
+      // of this can be done directly in the zoomed world.
+      const fwd = camera.getWorldDirection(new Vector3());
+      const toCam = tmp.copy(camera.position).sub(W.C).setY(0).normalize();
+      const P = toCam
+        .multiplyScalar(CONFIG.focusRing * W.R * s)
+        .add(W.C);
+      const depth = P.sub(camera.position).dot(fwd);
+      focusDistance.value = Math.max(0.01, depth);
       focalLength.value = CONFIG.focalRange * W.R * s;
       bokehScale.value = CONFIG.bokeh;
     }
@@ -955,7 +1027,7 @@ const sketch: Sketch<"webgpu"> = async ({
     marker.scale.setScalar(W.R * s);
 
     floor.position.set(W.C.x, 0, W.C.z);
-    floor.scale.setScalar(20 * W.viewDist * s);
+    floor.scale.setScalar(20 * viewDist * s);
 
     stats.update();
     post.render();
@@ -980,7 +1052,10 @@ const sketch: Sketch<"webgpu"> = async ({
 
 const settings: SketchSettings = {
   mode: "webgpu",
-  dimensions: FORMATS[format()].dimensions,
+  // No `dimensions` by default: ssam then uses the window size and follows
+  // window resizes (the wallpaper fills the whole page). The insta preset
+  // still opts into a fixed 1080×1920 canvas for social exports.
+  ...(CONFIG.insta ? { dimensions: FORMATS.insta.dimensions } : {}),
   pixelRatio: window.devicePixelRatio,
   animate: true,
   // one iteration = one full loop (the zoom makes it seamless)

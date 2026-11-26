@@ -13,11 +13,13 @@ tools/lull/
   runtime/                browser-side boot, GUI probe, params, rAF gate
   build/                  Node-side config/build/validate/zip helpers
 scripts/lull/             CLI entry points
-NN-name/lull/
-  scene.json              the only per-scene configuration
-  prelude.ts              installs storage shim + GUI probe before the sketch
-  entry.ts                imports prelude, then the sketch, then starts the bridge
-  tsconfig.json           standalone typecheck for lull/ + runtime
+NN-name/
+  preview.webp           16:9 catalog artwork (generated, also copied into the package)
+  lull/
+    scene.json            the only per-scene configuration
+    prelude.ts            installs storage shim + GUI probe before the sketch
+    entry.ts              imports prelude, then the sketch, then starts the bridge
+    tsconfig.json         standalone typecheck for lull/ + runtime
 ```
 
 ## Commands
@@ -29,12 +31,36 @@ npm run lull:init -- 19-foo --id codevember.foo --name "Foo"
 npm run lull:preview -- 01-fold
 npm run lull:build -- --only 01-fold --pack
 npm run lull:build -- --all --pack
+npm run lull:previews -- --all --pack
 npm run lull:build -- --all --target bundled --into F:/TK/GameProjects/lull-app
 npm run lull:sync-sdk -- --from F:/TK/GameProjects/lull-app/packages/scene-sdk
 ```
 
 `--release` makes `assetsLicense: "review"` a hard error. Use it for a
 publishable build; leave it off while bringing up a scene.
+
+## Preview screenshots
+
+Every extension needs a `preview.webp`: 16:9, 1600×900, under 3 MiB. The
+capture command serves the already-built packages, renders them in headless
+Chrome at that size, samples two frames, and keeps the one with more visual
+detail:
+
+```sh
+npm run lull:previews -- --all --pack
+npm run lull:previews -- --only 01-fold,06-orrery --pack
+```
+
+The WebP is written to both `<project>/preview.webp` (source of truth, copied
+into later builds) and `dist-lull/<id>/preview.webp` (package root, next to
+`catalog.json`). `--pack` refreshes the zip as well. The image sits outside the
+entry directory, so it does not change the content digest and the scene never
+loads it.
+
+Chrome and `puppeteer-core` are discovered locally; set `CHROME_PATH` or
+`PUPPETEER_CORE` to override. `--delay` / `--gap` / `--shots` control the
+sampling, and `--no-source` writes only the package copy. A per-scene capture
+log is written to `dist-lull/previews.json`.
 
 ## `scene.json`
 

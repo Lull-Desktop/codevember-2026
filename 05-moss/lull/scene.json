@@ -40,7 +40,11 @@
     "#stats",
     ".pages",
     ".balls",
-    ".hud"
+    ".hud",
+    "#other",
+    "#hint",
+    "#forms",
+    "#loading"
   ],
   "assetsLicense": "ok",
   "params": [

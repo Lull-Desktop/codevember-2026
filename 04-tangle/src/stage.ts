@@ -39,17 +39,23 @@ export async function createStage(options: StageOptions = {}) {
   const { loop = 8, fov = 32, distance = 3, margin = 0, bloom: glareLevel = 0.18, exposure = 1, background = 0x000000 } = options;
 
   const canvas = document.querySelector<HTMLCanvasElement>("#stage")!;
-  const side = () => Math.max(320, Math.min(innerHeight, innerWidth - margin));
+  // The wallpaper fills the window. `margin` is kept for square export/framing
+  // callers, but the normal view uses the whole viewport.
+  const viewport = () => ({
+    width: Math.max(320, innerWidth - margin),
+    height: Math.max(320, innerHeight),
+  });
+  const initialViewport = viewport();
   const renderer = new WebGPURenderer({ canvas, antialias: true });
   renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
-  renderer.setSize(side(), side());
+  renderer.setSize(initialViewport.width, initialViewport.height);
   renderer.setClearColor(new Color(background), 1);
   renderer.toneMapping = NeutralToneMapping;
   renderer.toneMappingExposure = exposure;
   await renderer.init();
   flattenSwizzles(renderer);
 
-  const camera = new PerspectiveCamera(fov, 1, 0.01, 200);
+  const camera = new PerspectiveCamera(fov, initialViewport.width / initialViewport.height, 0.01, 200);
   camera.position.set(...(options.eye ?? [0, 0, distance]));
   if (options.up) camera.up.set(...options.up);
   camera.lookAt(0, 0, 0);
@@ -111,16 +117,31 @@ export async function createStage(options: StageOptions = {}) {
     }
   };
 
+  /** Fit the whole window, keeping the camera aspect in sync. */
+  const fitViewport = () => {
+    const { width, height } = viewport();
+    renderer.setSize(width, height);
+    camera.aspect = width / height;
+    camera.updateProjectionMatrix();
+  };
+
   /** a fixed pixel size for export, whatever the window is. No size goes back to fitting */
   let fixedSize = 0;
   const setOutputSize = (size = 0) => {
     fixedSize = size;
     renderer.setPixelRatio(size ? 1 : Math.min(devicePixelRatio, 2));
-    if (size) renderer.setSize(size, size, false);
-    else renderer.setSize(side(), side());
+    if (size) {
+      renderer.setSize(size, size, false);
+      camera.aspect = 1;
+    } else {
+      const { width, height } = viewport();
+      renderer.setSize(width, height);
+      camera.aspect = width / height;
+    }
+    camera.updateProjectionMatrix();
   };
   addEventListener("resize", () => {
-    if (!fixedSize) renderer.setSize(side(), side());
+    if (!fixedSize) fitViewport();
   });
 
   /** Waits for real frames: reading straight after a render gets the last presented image */

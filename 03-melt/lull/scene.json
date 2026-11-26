@@ -46,6 +46,7 @@
     ".pages",
     ".balls",
     ".hud",
+    ".melt-picker",
     "body > div[style*=\"bottom:calc(44px\"]"
   ],
   "assetsLicense": "review",

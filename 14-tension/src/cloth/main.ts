@@ -874,6 +874,7 @@ const sketch: Sketch<"webgpu"> = async ({ wrap, canvas, width, height, pixelRati
   // sound no sooner)
   const music = SHOW === "danube" ? new Music(BEAT, PERIOD) : SHOW === "waltz" ? new Recording("waltz.flac", PERIOD) : undefined;
   const hint = document.createElement("div");
+  hint.className = "tension-hint";
   const startMusic = () => {
     music?.start();
     hint.remove();
@@ -924,6 +925,7 @@ const sketch: Sketch<"webgpu"> = async ({ wrap, canvas, width, height, pixelRati
     return strict && (Math.abs(x) > half || Math.abs(z) > half) ? undefined : [x, z];
   };
   const touchHint = document.createElement("div");
+  touchHint.className = "tension-hint";
   const onDown = (e: PointerEvent) => {
     if (e.button !== 0) return;
     const p = onSheet(e, true);

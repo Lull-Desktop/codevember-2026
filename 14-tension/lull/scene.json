@@ -45,7 +45,8 @@
     "#stats",
     ".pages",
     ".balls",
-    ".hud"
+    ".hud",
+    ".tension-hint"
   ],
   "assetsLicense": "review",
   "params": [

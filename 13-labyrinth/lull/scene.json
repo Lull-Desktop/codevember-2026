@@ -40,7 +40,9 @@
     "#stats",
     ".pages",
     ".balls",
-    ".hud"
+    ".hud",
+    ".labyrinth-stats",
+    ".labyrinth-hint"
   ],
   "assetsLicense": "ok",
   "params": [

@@ -2,6 +2,7 @@
 
 import {
   existsSync,
+  copyFileSync,
   mkdirSync,
   readFileSync,
   rmSync,
@@ -31,6 +32,12 @@ export function assembleScene({
 
   rmSync(pkgDir, { recursive: true, force: true });
   mkdirSync(entryDir, { recursive: true });
+
+  // Optional catalog artwork. It sits next to catalog.json, outside the entry
+  // directory, so it is not part of the content digest and is not loaded by
+  // the scene runtime.
+  const preview = join(projectDir, "preview.webp");
+  if (existsSync(preview)) copyFileSync(preview, join(pkgDir, "preview.webp"));
 
   if (!existsSync(join(builtDir, "scene.js"))) {
     throw new Error(`Vite 没有产出 scene.js：${builtDir}`);

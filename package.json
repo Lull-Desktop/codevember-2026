@@ -9,6 +9,7 @@
     "lull:check": "node scripts/lull/check.mjs",
     "lull:test": "node --test scripts/lull/test/digest.test.mjs scripts/lull/test/config.test.mjs scripts/lull/test/package.test.mjs",
     "lull:build": "node scripts/lull/build.mjs",
+    "lull:previews": "node scripts/lull/screenshots.mjs",
     "lull:preview": "node scripts/lull/preview.mjs"
   }
 }

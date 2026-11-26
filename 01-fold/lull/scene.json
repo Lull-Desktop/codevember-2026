@@ -71,19 +71,6 @@
       "apply": "finish"
     },
     {
-      "key": "thickness",
-      "type": "number",
-      "label": "纸厚 / Paper thickness",
-      "default": 0.012,
-      "min": 0.003,
-      "max": 0.04,
-      "step": 0.001,
-      "binding": {
-        "property": "thickness"
-      },
-      "apply": "finish"
-    },
-    {
       "key": "seed",
       "type": "number",
       "label": "随机种子 / Seed",
@@ -95,6 +82,79 @@
         "property": "seed"
       },
       "apply": "finish"
+    },
+    {
+      "key": "camera-dolly",
+      "type": "number",
+      "label": "相机推拉 / Dolly",
+      "description": "相机距离倍数：小于 1.5 向前推近，大于 1.5 向后拉远；1.5 为默认机位。",
+      "default": 1.5,
+      "min": 1,
+      "max": 2.5,
+      "step": 0.05,
+      "binding": {
+        "property": "camDistance"
+      },
+      "apply": "change"
+    },
+    {
+      "key": "camera-yaw",
+      "type": "number",
+      "label": "相机水平旋转 / Yaw",
+      "default": 0,
+      "min": -180,
+      "max": 180,
+      "step": 1,
+      "binding": {
+        "property": "cameraYaw"
+      },
+      "apply": "change"
+    },
+    {
+      "key": "camera-pitch",
+      "type": "number",
+      "label": "相机俯仰 / Pitch",
+      "default": 0,
+      "min": -60,
+      "max": 60,
+      "step": 1,
+      "binding": {
+        "property": "cameraPitch"
+      },
+      "apply": "change"
+    },
+    {
+      "key": "camera-roll",
+      "type": "number",
+      "label": "相机翻滚 / Roll",
+      "default": 0,
+      "min": -180,
+      "max": 180,
+      "step": 1,
+      "binding": {
+        "property": "cameraRoll"
+      },
+      "apply": "change"
+    },
+    {
+      "key": "theme",
+      "type": "enum",
+      "label": "主题样式 / Theme",
+      "default": "night",
+      "binding": {
+        "property": "theme"
+      },
+      "options": [
+        {
+          "value": "night",
+          "label": "夜间 / Night"
+        },
+        {
+          "value": "day",
+          "label": "日间 / Day"
+        }
+      ],
+      "apply": "change"
     },
     {
       "key": "curve-color",

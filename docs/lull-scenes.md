@@ -36,6 +36,7 @@ npm run lull:check
 npm run lull:test
 npm run lull:build -- --only 01-fold --pack
 npm run lull:build -- --all --pack
+npm run lull:previews -- --all --pack
 npm run lull:preview -- 03-melt
 npm run lull:build -- --all --target bundled --into F:/TK/GameProjects/lull-app
 ```
@@ -46,14 +47,35 @@ For the bundled route, the target directory is
 `extensions/bundled/codevember-<slug>/`; run `pnpm extensions:build` in
 lull-app afterwards.
 
+## Preview screenshots
+
+Each extension has a 16:9 `preview.webp` at 1600×900, under 3 MiB:
+
+- `<project>/preview.webp` — source file, copied into every later build.
+- `dist-lull/<id>/preview.webp` — package root, next to `catalog.json`; it is
+  outside the entry directory, so it does not change the content digest.
+- `dist-lull/artifacts/<id>-<version>.zip` — includes the preview when packed.
+
+Regenerate them after changing a scene:
+
+```sh
+npm run lull:previews -- --all --pack
+npm run lull:previews -- --only 01-fold --pack
+```
+
+The command renders the built package in headless Chrome, samples two frames,
+and keeps the one with more visual detail. Generation needs a local Chrome and
+`puppeteer-core`; `CHROME_PATH` / `PUPPETEER_CORE` override discovery. The
+report is `dist-lull/previews.json`.
+
 ## Per-scene snapshot
 
 | Scene | id | Params | Size | Notes |
 | --- | --- | --- | ---: | --- |
-| 01-fold | codevember.fold | 5 | 1.1 MB | P-EVAL warning; CSP browser test passed |
+| 01-fold | codevember.fold | 9 | 1.1 MB | Full-window canvas; camera dolly/yaw/pitch/roll + day/night theme params; P-EVAL warning; CSP browser test passed |
 | 02-shatter | codevember.shatter | 2 | 6.7 MB | P-EVAL; >5 MB; bake assets |
 | 03-melt | codevember.melt | 5 | 9.5 MB | >5 MB; CSP browser test passed |
-| 04-tangle | codevember.tangle | 2 | 22.8 MB | P-EVAL; >5 MB; largest package |
+| 04-tangle | codevember.tangle | 2 | 22.8 MB | Full-window canvas; P-EVAL; >5 MB; largest package |
 | 05-moss | codevember.moss | 5 | 140 KB | clean |
 | 06-orrery | codevember.orrery | 5 | 1.2 MB | clean; CSP browser test passed |
 | 07-hollow | codevember.hollow | 5 | 1.1 MB | P-EVAL; CSP browser test passed |
